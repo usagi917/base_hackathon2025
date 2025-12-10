@@ -12,14 +12,14 @@ import { extractApologyIdFromReceipt } from '../utils/transaction';
 
 export function useConfessionFlow() {
   const { isConnected, chain } = useAccount();
-  const { switchChain } = useSwitchChain();
+  const { switchChain, isPending: isSwitchingChain } = useSwitchChain();
   const [step, setStep] = useState<Step>(Step.INTRO);
   const [message, setMessage] = useState('');
   const [amount, setAmount] = useState(DEFAULT_AMOUNT);
   const [apologyId, setApologyId] = useState<string | null>(null);
   const [pendingDeposit, setPendingDeposit] = useState<{ message: string; amount: string } | null>(null);
 
-  const { data: hash, writeContract, isPending, error: writeError } = useWriteContract();
+  const { data: hash, writeContract, isPending: isWriting, error: writeError } = useWriteContract();
   const { isLoading: isConfirming, isSuccess, data: receipt } = useWaitForTransactionReceipt({ hash });
 
   // ウォレット接続時にBase Sepoliaに自動切り替え
@@ -56,10 +56,10 @@ export function useConfessionFlow() {
 
   // トランザクション処理中はPROCESSINGステップに
   useEffect(() => {
-    if (isPending || isConfirming) {
+    if (isWriting || isConfirming) {
       setStep(Step.PROCESSING);
     }
-  }, [isPending, isConfirming]);
+  }, [isWriting, isConfirming]);
 
   // トランザクション成功時にIDを抽出してSUCCESSステップに
   useEffect(() => {
@@ -128,7 +128,7 @@ export function useConfessionFlow() {
     amount,
     apologyId,
     isConnected,
-    isPending,
+    isPending: isWriting || isSwitchingChain,
     isConfirming,
     writeError,
     setMessage,

@@ -17,6 +17,7 @@ export default function Home() {
     amount,
     apologyId,
     isConnected,
+    isPending,
     writeError,
     setMessage,
     setAmount,
@@ -27,15 +28,15 @@ export default function Home() {
   } = useConfessionFlow();
 
   return (
-    <main className="relative min-h-screen w-full font-vt323 selection:bg-black selection:text-white p-4 pb-20 overflow-x-hidden">
+    <main className="relative min-h-screen w-full font-vt323 selection:bg-black selection:text-white overflow-x-hidden flex flex-col">
       {/* Scanlines Overlay */}
       <div className="scanlines fixed inset-0 pointer-events-none z-0" />
 
-      {/* Header / Player Status */}
+      {/* Header */}
       <Header />
 
       {/* Main Game Stage */}
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-[90vh] pt-24">
+      <div className="relative z-10 flex-grow flex flex-col items-center justify-center p-4 py-24 md:py-32">
         <AnimatePresence mode="wait">
           {step === Step.INTRO && (
             <IntroStep isConnected={isConnected} />
@@ -46,6 +47,7 @@ export default function Home() {
               message={message}
               onMessageChange={setMessage}
               onNext={nextStep}
+              onPrev={prevStep}
             />
           )}
 
@@ -56,6 +58,7 @@ export default function Home() {
               onPrev={prevStep}
               onDeposit={handleDeposit}
               error={writeError}
+              isLoading={isPending}
             />
           )}
 

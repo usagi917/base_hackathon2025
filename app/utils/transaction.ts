@@ -14,7 +14,7 @@ export function extractApologyIdFromReceipt(receipt: { logs: Array<{ address: st
           const decoded = decodeEventLog({
             abi: REGRET_VAULT_ABI,
             data: log.data,
-            topics: log.topics,
+            topics: log.topics as [`0x${string}`, ...`0x${string}`[]],
           });
           
           if (decoded.eventName === 'Deposited' && decoded.args.id !== undefined) {
