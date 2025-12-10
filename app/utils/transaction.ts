@@ -1,0 +1,41 @@
+// トランザクション関連のユーティリティ関数
+
+import { decodeEventLog } from 'viem';
+import { REGRET_VAULT_ABI, REGRET_VAULT_ADDRESS } from '../constants';
+
+/**
+ * トランザクションレシートからApology IDを抽出
+ */
+export function extractApologyIdFromReceipt(receipt: { logs: Array<{ address: string; data: `0x${string}`; topics: `0x${string}`[] }> }): string | null {
+  try {
+    for (const log of receipt.logs) {
+      if (log.address.toLowerCase() === REGRET_VAULT_ADDRESS.toLowerCase()) {
+        try {
+          const decoded = decodeEventLog({
+            abi: REGRET_VAULT_ABI,
+            data: log.data,
+            topics: log.topics,
+          });
+          
+          if (decoded.eventName === 'Deposited' && decoded.args.id !== undefined) {
+            return decoded.args.id.toString();
+          }
+        } catch {
+          continue;
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Failed to extract apology ID:', error);
+  }
+  return null;
+}
+
+/**
+ * シェアリンクを生成
+ */
+export function generateShareLink(apologyId: string | null): string {
+  if (!apologyId) return '';
+  return `${typeof window !== 'undefined' ? window.location.origin : ''}/resolve/${apologyId}`;
+}
+
