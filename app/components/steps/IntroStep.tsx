@@ -2,9 +2,10 @@
 
 'use client';
 
+// biome-ignore assist/source/organizeImports: <explanation>
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Trophy, Zap, Gamepad2, Skull, Coins } from 'lucide-react';
+import { ArrowRight, Trophy, Gamepad2, Coins } from 'lucide-react';
 
 interface IntroStepProps {
   isConnected: boolean;

@@ -1,5 +1,6 @@
 // マウスフォロワー用のカスタムフック
 
+// biome-ignore assist/source/organizeImports: <explanation>
 import { useEffect } from 'react';
 import { useMotionValue, useSpring } from 'framer-motion';
 import { MOUSE_SPRING_CONFIG } from '../constants/config';
