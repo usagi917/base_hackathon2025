@@ -35,7 +35,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body className={`${notoSansJP.variable} ${inter.variable} ${jetbrainsMono.variable} bg-yellow-300 text-black antialiased font-sans overflow-x-hidden`}>
+      <body className={`${notoSansJP.variable} ${inter.variable} ${jetbrainsMono.variable} bg-[var(--md-sys-color-background)] text-[var(--md-sys-color-on-background)] antialiased font-sans overflow-x-hidden`}>
         <Providers>{children}</Providers>
       </body>
     </html>

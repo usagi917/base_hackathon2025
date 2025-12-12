@@ -4,7 +4,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Share2, Check } from 'lucide-react';
+import { Share2, Check, CheckCircle2, Copy } from 'lucide-react';
 import { generateShareLink } from '../../utils/transaction';
 
 interface SuccessStepProps {
@@ -25,45 +25,55 @@ export function SuccessStep({ apologyId, onReset }: SuccessStepProps) {
   return (
     <motion.div
       key="success"
-      initial={{ scale: 0.5, opacity: 0 }}
+      initial={{ scale: 0.9, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      className="w-full max-w-3xl"
+      className="w-full max-w-2xl"
     >
-      <div className="bg-green-400 border-4 border-black p-8 md:p-12 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] text-center relative overflow-hidden">
-        {/* Confetti-ish background decoration */}
-        <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[radial-gradient(circle,white_2px,transparent_1px)] bg-[size:20px_20px]" />
-        
-        <h1 className="font-pixel text-4xl md:text-6xl text-white text-shadow-retro mb-8 relative z-10">
-          実績<br/>解除！
+      <div className="material-card p-10 text-center overflow-hidden relative">
+        <div className="flex justify-center mb-6">
+           <motion.div 
+             initial={{ scale: 0 }}
+             animate={{ scale: 1 }}
+             transition={{ type: "spring", duration: 0.6 }}
+             className="w-20 h-20 rounded-full bg-[var(--md-sys-color-primary-container)] flex items-center justify-center text-[var(--md-sys-color-primary)]"
+           >
+             <CheckCircle2 size={48} />
+           </motion.div>
+        </div>
+
+        <h1 className="headline-medium font-bold text-[var(--md-sys-color-on-surface)] mb-4">
+          後悔が証明されました
         </h1>
         
-        <div className="bg-white border-4 border-black p-6 mb-8 transform rotate-1">
-           <p className="font-vt323 text-2xl text-gray-600 mb-2">クエストアイテム獲得:</p>
-           <p className="font-pixel text-sm md:text-lg break-all text-blue-600 bg-blue-100 p-2 select-all">
-             {shareLink}
-           </p>
+        <p className="body-large text-[var(--md-sys-color-on-surface-variant)] mb-8">
+          あなたの真実と供物はブロックチェーンに刻まれました。<br/>
+          このリンクを相手に送り、審判を仰いでください。
+        </p>
+
+        <div className="bg-[var(--md-sys-color-surface-variant)] rounded-lg p-2 mb-8 flex items-center gap-2">
+           <div className="flex-grow px-3 py-2 text-left overflow-x-auto whitespace-nowrap scrollbar-hide">
+             <span className="text-[var(--md-sys-color-on-surface-variant)] font-mono text-sm">
+               {shareLink}
+             </span>
+           </div>
            
            <button
             type="button"
             onClick={handleCopy}
-            className="mt-4 w-full pixel-btn bg-yellow-300 flex items-center justify-center gap-2 hover:bg-yellow-200 transition-colors"
+            className="material-btn material-btn-filled !rounded-lg !px-4 !py-2 flex items-center gap-2"
            >
-             {copied ? <Check size={16} /> : <Share2 size={16} />}
-             {copied ? 'コピーしました！' : 'クエストリンクをコピー'}
+             {copied ? <Check size={18} /> : <Copy size={18} />}
+             {copied ? 'コピー完了' : 'コピー'}
            </button>
         </div>
 
-        <div className="relative z-10">
-           <p className="font-bold text-xl mb-8">
-             あなたの後悔がミントされました。リンクを共有して審判を求めましょう。
-           </p>
-           
+        <div>
            <button
              type="button"
              onClick={onReset}
-             className="pixel-btn pixel-btn-primary hover-shake"
+             className="material-btn material-btn-outlined"
            >
-             もう一度プレイ
+             新しい証明を作成
            </button>
         </div>
       </div>

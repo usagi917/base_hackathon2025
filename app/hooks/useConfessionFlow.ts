@@ -1,124 +1,79 @@
 // 告白フロー管理用のカスタムフック
 
 // biome-ignore assist/source/organizeImports: explain why this is needed
-import { useState, useEffect } from 'react';
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useSwitchChain } from 'wagmi';
-import { baseSepolia } from 'wagmi/chains';
+import { useMemo, useState } from 'react';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseEther } from 'viem';
 import { REGRET_VAULT_ABI, REGRET_VAULT_ADDRESS } from '../constants';
 import { Step } from '../types';
 import { DEFAULT_AMOUNT } from '../constants/config';
 import { extractApologyIdFromReceipt } from '../utils/transaction';
+import { useBaseChainGate } from './useBaseChainGate';
 
 export function useConfessionFlow() {
-  const { isConnected, chain } = useAccount();
-  const { switchChain, isPending: isSwitchingChain } = useSwitchChain();
-  const [step, setStep] = useState<Step>(Step.INTRO);
+  const { isConnected } = useAccount();
+  const { ensureBaseChain, isSwitchingChain } = useBaseChainGate();
+  const [userStep, setUserStep] = useState<Step>(Step.CONFESS);
   const [message, setMessage] = useState('');
   const [amount, setAmount] = useState(DEFAULT_AMOUNT);
-  const [apologyId, setApologyId] = useState<string | null>(null);
-  const [pendingDeposit, setPendingDeposit] = useState<{ message: string; amount: string } | null>(null);
+  const [ignoredHash, setIgnoredHash] = useState<`0x${string}` | null>(null);
 
   const { data: hash, writeContract, isPending: isWriting, error: writeError } = useWriteContract();
   const { isLoading: isConfirming, isSuccess, data: receipt } = useWaitForTransactionReceipt({ hash });
 
-  // ウォレット接続時にBase Sepoliaに自動切り替え
-  useEffect(() => {
-    if (isConnected && chain && chain.id !== baseSepolia.id) {
-      switchChain({ chainId: baseSepolia.id });
-    }
-  }, [isConnected, chain, switchChain]);
+  const apologyId = useMemo(() => {
+    if (!isSuccess || !receipt || !hash) return null;
+    if (ignoredHash && hash === ignoredHash) return null;
+    if (receipt.transactionHash && receipt.transactionHash !== hash) return null;
+    return extractApologyIdFromReceipt(receipt);
+  }, [hash, ignoredHash, isSuccess, receipt]);
 
-  // ネットワークがBase Sepoliaに切り替わったら、保留中の送信を実行
-  useEffect(() => {
-    if (pendingDeposit && chain && chain.id === baseSepolia.id) {
-      // ネットワークが正しく切り替わったら送信
-      writeContract({
-        address: REGRET_VAULT_ADDRESS,
-        abi: REGRET_VAULT_ABI,
-        functionName: 'deposit',
-        args: [pendingDeposit.message],
-        value: parseEther(pendingDeposit.amount),
-      });
-      setPendingDeposit(null);
-    }
-  }, [chain, pendingDeposit, writeContract]);
+  const isProcessing = isWriting || isConfirming;
 
-  // ウォレット接続状態に応じてステップを更新
-  useEffect(() => {
-    if (!isConnected) {
-      setStep(Step.INTRO);
-    } else if (step === Step.INTRO && isConnected) {
-      // 接続されていればCONFESSステップに進む（ネットワーク切り替えは別で処理）
-      setStep(Step.CONFESS);
-    }
-  }, [isConnected, step]);
-
-  // トランザクション処理中はPROCESSINGステップに
-  useEffect(() => {
-    if (isWriting || isConfirming) {
-      setStep(Step.PROCESSING);
-    }
-  }, [isWriting, isConfirming]);
-
-  // トランザクション成功時にIDを抽出してSUCCESSステップに
-  useEffect(() => {
-    if (isSuccess && receipt) {
-      const id = extractApologyIdFromReceipt(receipt);
-      if (id) {
-        setApologyId(id);
-        setStep(Step.SUCCESS);
-      }
-    }
-  }, [isSuccess, receipt]);
+  const step = useMemo(() => {
+    if (!isConnected) return Step.INTRO;
+    if (isProcessing) return Step.PROCESSING;
+    if (apologyId) return Step.SUCCESS;
+    return userStep;
+  }, [isConnected, isProcessing, apologyId, userStep]);
 
   const handleDeposit = async () => {
-    // 送信前にネットワークがBase Sepoliaか確認
-    if (!chain || chain.id !== baseSepolia.id) {
-      // Base Sepoliaに切り替え、送信情報を保留
-      setPendingDeposit({ message, amount });
-      try {
-        await switchChain({ chainId: baseSepolia.id });
-      } catch (error) {
-        // ネットワーク切り替えが拒否された場合
-        setPendingDeposit(null);
-        console.error('ネットワーク切り替えが拒否されました:', error);
-      }
-      return;
-    }
-    
-    // Base Sepoliaで送信
-    writeContract({
+    // 新規送信前に成功結果をクリア
+    setIgnoredHash(null);
+
+    const send = () => writeContract({
       address: REGRET_VAULT_ADDRESS,
       abi: REGRET_VAULT_ABI,
       functionName: 'deposit',
       args: [message],
       value: parseEther(amount),
     });
+
+    await ensureBaseChain(send);
   };
 
   const resetFlow = () => {
-    setApologyId(null);
+    if (hash) setIgnoredHash(hash);
     setMessage('');
     setAmount(DEFAULT_AMOUNT);
-    setStep(Step.CONFESS);
+    setUserStep(Step.CONFESS);
   };
 
   const nextStep = () => {
-    if (step === Step.CONFESS && !message.trim()) return;
+    if (userStep === Step.CONFESS && !message.trim()) return;
     
     // ステップを次のステップに進める
-    const nextStepValue = step + 1;
+    const nextStepValue = userStep + 1;
     if (nextStepValue <= Step.SUCCESS) {
-      setStep(nextStepValue as Step);
+      setUserStep(nextStepValue as Step);
     }
   };
 
   const prevStep = () => {
     // ステップを前のステップに戻す
-    const prevStepValue = step - 1;
+    const prevStepValue = userStep - 1;
     if (prevStepValue >= Step.INTRO) {
-      setStep(prevStepValue as Step);
+      setUserStep(prevStepValue as Step);
     }
   };
 
@@ -139,4 +94,3 @@ export function useConfessionFlow() {
     prevStep,
   };
 }
-

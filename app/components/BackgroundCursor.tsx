@@ -19,7 +19,7 @@ export function BackgroundCursor() {
         width: `${BACKGROUND_SIZE.width}px`,
         height: `${BACKGROUND_SIZE.height}px`,
       }}
-      className="pointer-events-none fixed top-0 left-0 bg-gradient-to-r from-red-600 to-purple-600 rounded-full blur-[100px] opacity-20 mix-blend-screen z-0"
+      className="pointer-events-none fixed top-0 left-0 bg-gradient-to-r from-[var(--md-sys-color-primary)] to-[var(--md-sys-color-tertiary)] rounded-full blur-[120px] opacity-15 z-0"
     />
   );
 }

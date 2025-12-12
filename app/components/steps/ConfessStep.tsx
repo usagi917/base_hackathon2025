@@ -15,42 +15,55 @@ export function ConfessStep({ message, onMessageChange, onNext, onPrev }: Confes
   return (
     <motion.div
       key="confess"
-      initial={{ x: 100, opacity: 0 }}
+      initial={{ x: 50, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
-      exit={{ x: -100, opacity: 0 }}
+      exit={{ x: -50, opacity: 0 }}
       className="w-full max-w-2xl"
     >
-      <div className="bg-cyan-300 border-4 border-black p-2 mb-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] inline-block">
-        <h2 className="font-pixel text-lg">レベル1: 真実</h2>
+      <div className="mb-8 text-center">
+        <h2 className="headline-medium text-[var(--md-sys-color-primary)] mb-2">告白</h2>
+        <p className="text-[var(--md-sys-color-on-surface-variant)]">
+          相手へのメッセージを入れてください。
+        </p>
       </div>
       
-      <div className="bg-white border-4 border-black p-6 md:p-10 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-        <label htmlFor="message" className="block font-pixel text-sm mb-4">メッセージは何ですか？</label>
-        <textarea
-          id="message"
-          placeholder="本番データベースを誤って削除してしまった..."
-          className="w-full h-48 bg-gray-100 border-4 border-gray-300 focus:border-black p-4 font-vt323 text-2xl outline-none resize-none mb-4"
-          value={message}
-          onChange={(e) => onMessageChange(e.target.value)}
-        />
+      <div className="material-card p-8 md:p-10">
+        <div className="relative mb-6">
+          <textarea
+            id="message"
+            placeholder="本番データベースを誤って削除してしまった..."
+            className="w-full h-48 bg-[var(--md-sys-color-surface-variant)] rounded-t-lg border-b-2 border-[var(--md-sys-color-on-surface-variant)] focus:border-[var(--md-sys-color-primary)] pt-12 pb-4 px-4 text-lg text-[var(--md-sys-color-on-surface)] outline-none resize-none transition-colors"
+            value={message}
+            onChange={(e) => onMessageChange(e.target.value)}
+          />
+          <label 
+            htmlFor="message" 
+            className="absolute top-0 left-0 p-4 text-xs font-medium text-[var(--md-sys-color-primary)] pointer-events-none"
+          >
+            メッセージ
+          </label>
+        </div>
+
         <div className="flex justify-between items-center gap-4">
-          <span className="font-vt323 text-xl text-gray-500 hidden md:inline">{message.length} 文字</span>
+          <span className="text-sm text-[var(--md-sys-color-outline)]">
+            {message.length} 文字
+          </span>
           
           <div className="flex gap-4 w-full md:w-auto justify-end">
             <button
               type="button"
               onClick={onPrev}
-              className="pixel-btn hover:bg-gray-100"
+              className="material-btn material-btn-outlined"
             >
-              &lt; 戻る
+              戻る
             </button>
             <button
               type="button"
               onClick={onNext}
               disabled={!message.trim()}
-              className="pixel-btn pixel-btn-primary hover-shake disabled:opacity-50"
+              className="material-btn material-btn-filled disabled:opacity-50 disabled:shadow-none"
             >
-              次へ {'>'}
+              次へ
             </button>
           </div>
         </div>

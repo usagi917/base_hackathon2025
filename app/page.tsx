@@ -28,10 +28,8 @@ export default function Home() {
   } = useConfessionFlow();
 
   return (
-    <main className="relative min-h-screen w-full font-vt323 selection:bg-black selection:text-white overflow-x-hidden flex flex-col">
-      {/* Scanlines Overlay */}
-      <div className="scanlines fixed inset-0 pointer-events-none z-0" />
-
+    <main className="relative min-h-screen w-full flex flex-col">
+      
       {/* Header */}
       <Header />
 

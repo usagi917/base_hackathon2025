@@ -20,11 +20,13 @@ export function ErrorDisplay({ error, className }: ErrorDisplayProps) {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`p-4 bg-red-900/30 border border-red-900 rounded-xl flex items-center gap-3 text-red-400 font-bold ${className || ''}`}
+      className={`p-4 bg-[var(--md-sys-color-error-container)] rounded-lg flex items-center gap-3 text-[var(--md-sys-color-on-error-container)] font-medium ${className || ''}`}
     >
       <AlertCircle size={24} />
       <span>{message}</span>
     </motion.div>
   );
 }
+
+
 

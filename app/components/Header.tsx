@@ -13,35 +13,32 @@ import { Avatar, Name, Identity, Address, EthBalance } from '@coinbase/onchainki
 
 export function Header() {
   return (
-    <header className="fixed top-0 left-0 w-full p-2 md:p-4 z-50 pointer-events-none">
-      <div className="flex flex-col md:flex-row justify-between items-center md:items-start max-w-7xl mx-auto gap-2 md:gap-0">
+    <header className="fixed top-0 left-0 w-full z-50 bg-[var(--md-sys-color-background)]/80 backdrop-blur-md border-b border-[var(--md-sys-color-outline)] transition-all duration-300">
+      <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
         {/* Logo */}
-        <div className="bg-white border-2 md:border-4 border-black p-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] pointer-events-auto">
-          <h1 className="font-pixel text-lg md:text-2xl leading-none text-center md:text-left">
-            後悔の証明<br/>PROOF_OF_REGRET.EXE
+        <div className="flex items-center">
+          <h1 className="text-xl font-bold tracking-tight text-[var(--md-sys-color-primary)] font-sans">
+            後悔の証明 <span className="font-light text-[var(--md-sys-color-secondary)] ml-2 text-sm hidden sm:inline">Proof of Regret</span>
           </h1>
         </div>
 
         {/* Wallet / Player Stats */}
-        <div className="pointer-events-auto w-full md:w-auto flex justify-center md:block">
-          <div className="bg-white border-2 md:border-4 border-black p-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-             <Wallet>
-              <ConnectWallet className="bg-transparent text-black font-pixel text-xs px-2 py-2 hover:bg-neutral-100 transition-all !rounded-none">
-                <span className="mr-2 hidden sm:inline">プレイヤー1</span>
-                <Avatar className="h-6 w-6 rounded-none border-2 border-black" />
-                <Name className="font-vt323 text-lg" />
-              </ConnectWallet>
-              <WalletDropdown>
-                <Identity className="px-4 pt-3 pb-2 bg-white" hasCopyAddressOnClick>
-                  <Avatar />
-                  <Name />
-                  <Address />
-                  <EthBalance />
-                </Identity>
-                <WalletDropdownDisconnect className="bg-red-500 text-white font-pixel hover:bg-red-600" />
-              </WalletDropdown>
-            </Wallet>
-          </div>
+        <div className="flex items-center gap-4">
+          <Wallet>
+            <ConnectWallet className="!bg-[var(--md-sys-color-primary-container)] !text-[var(--md-sys-color-on-primary-container)] !font-medium !rounded-full !px-4 !py-2 hover:!bg-[var(--md-sys-color-primary)] hover:!text-white transition-all shadow-sm">
+              <Avatar className="h-6 w-6 rounded-full mr-2" />
+              <Name className="text-sm font-medium" />
+            </ConnectWallet>
+            <WalletDropdown className="!rounded-2xl !shadow-lg !border-none !mt-2 overflow-hidden">
+              <Identity className="px-4 pt-4 pb-3 bg-[var(--md-sys-color-surface)]" hasCopyAddressOnClick>
+                <Avatar />
+                <Name />
+                <Address />
+                <EthBalance />
+              </Identity>
+              <WalletDropdownDisconnect className="!bg-[var(--md-sys-color-error-container)] !text-[var(--md-sys-color-on-error-container)] hover:!bg-[var(--md-sys-color-error)] hover:!text-white transition-colors" />
+            </WalletDropdown>
+          </Wallet>
         </div>
       </div>
     </header>

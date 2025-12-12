@@ -1,9 +1,8 @@
 'use client';
 // biome-ignore assist/source/organizeImports: explain why this is needed
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
-import { useReadContract, useWriteContract, useWaitForTransactionReceipt, useAccount, useSwitchChain } from 'wagmi';
-import { baseSepolia } from 'wagmi/chains';
+import { useReadContract, useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi';
 import { formatEther } from 'viem';
 import { REGRET_VAULT_ABI, REGRET_VAULT_ADDRESS } from '../../constants';
 import { ConnectWallet, Wallet, WalletDropdown, WalletDropdownDisconnect } from '@coinbase/onchainkit/wallet';
@@ -13,19 +12,13 @@ import clsx from 'clsx';
 import { Shield, Sword, Scroll, Skull } from 'lucide-react';
 import { type Apology, Outcome } from '../../types';
 import { ErrorDisplay } from '../../components/ErrorDisplay';
+import { useBaseChainGate } from '../../hooks/useBaseChainGate';
 
 export default function ResolvePage() {
     const params = useParams();
     const id = params.id as string;
-    const { isConnected, chain } = useAccount();
-    const { switchChain } = useSwitchChain();
-
-    // ウォレット接続時にBase Sepoliaに自動切り替え
-    useEffect(() => {
-        if (isConnected && chain && chain.id !== baseSepolia.id) {
-            switchChain({ chainId: baseSepolia.id });
-        }
-    }, [isConnected, chain, switchChain]);
+    const { isConnected } = useAccount();
+    const { ensureBaseChain, isSwitchingChain, isOnBase } = useBaseChainGate();
 
     const { data: apology, isLoading: isReading, refetch: refetchApology } = useReadContract({
         address: REGRET_VAULT_ADDRESS,
@@ -38,6 +31,9 @@ export default function ResolvePage() {
     const { data: hash, writeContract, isPending, error: writeError } = useWriteContract();
     const { isLoading: isConfirming, isSuccess: isTransactionSuccess } = useWaitForTransactionReceipt({ hash });
 
+    const apologyData = useMemo(() => apology as Apology | undefined, [apology]);
+    const outcomeInt = useMemo(() => Number(apologyData?.outcome ?? Outcome.Pending), [apologyData]);
+
     // トランザクションが成功したら即座に再フェッチ
     useEffect(() => {
         if (isTransactionSuccess) {
@@ -46,26 +42,14 @@ export default function ResolvePage() {
     }, [isTransactionSuccess, refetchApology]);
 
     const handleDecision = async (decision: Outcome) => {
-        // 送信前にネットワークがBase Sepoliaか確認
-        if (!chain || chain.id !== baseSepolia.id) {
-            // Base Sepoliaに切り替え
-            try {
-                await switchChain({ chainId: baseSepolia.id });
-            } catch (error) {
-                // ネットワーク切り替えが拒否された場合
-                console.error('ネットワーク切り替えが拒否されました:', error);
-            }
-            // ネットワーク切り替えが完了するまで待つ（ユーザーが再度ボタンを押す必要がある）
-            return;
-        }
-        
-        // Base Sepoliaで送信
-        writeContract({
+        const send = () => writeContract({
             address: REGRET_VAULT_ADDRESS,
             abi: REGRET_VAULT_ABI,
             functionName: 'resolve',
             args: [BigInt(id), decision],
         });
+
+        await ensureBaseChain(send);
     }
 
     if (!id) {
@@ -91,10 +75,6 @@ export default function ResolvePage() {
             </div>
         );
     }
-
-    // 型安全にApologyデータを取得
-    const apologyData = apology as Apology;
-    const outcomeInt = Number(apologyData.outcome);
 
     // Resolution Screen (Game Over / Outcome)
     if (outcomeInt !== Outcome.Pending) {
@@ -187,20 +167,20 @@ export default function ResolvePage() {
                              <div>
                                  <p className="font-pixel text-xs text-gray-500 mb-1">戦利品:</p>
                                  <h1 className="text-5xl font-pixel text-green-600 text-shadow-retro">
-                                     {formatEther(apologyData.amount)} ETH
+                                     {formatEther(apologyData?.amount ?? BigInt(0))} ETH
                                  </h1>
                              </div>
                              <div className="text-right">
                                  <p className="font-pixel text-xs text-gray-500">プレイヤー:</p>
                                  <p className="font-mono text-sm bg-gray-100 p-1 border-2 border-black truncate w-32 md:w-auto">
-                                     {apologyData.sender}
+                                     {apologyData?.sender}
                                  </p>
                              </div>
                         </div>
 
                         <div className="bg-gray-100 border-4 border-gray-300 inset-0 p-4 min-h-[200px]">
                              <p className="text-3xl leading-relaxed text-black font-vt323">
-                                "{apologyData.message}"
+                                {apologyData?.message}
                             </p>
                         </div>
                     </div>
@@ -232,7 +212,7 @@ export default function ResolvePage() {
                                 <button
                                     type="button"
                                     onClick={() => handleDecision(Outcome.Forgiven)}
-                                    disabled={isPending || isConfirming}
+                                    disabled={isPending || isConfirming || isSwitchingChain || !isOnBase}
                                     className="w-full pixel-btn pixel-btn-success flex items-center justify-between group h-24"
                                 >
                                     <div className="text-left">
@@ -245,7 +225,7 @@ export default function ResolvePage() {
                                 <button
                                     type="button"
                                     onClick={() => handleDecision(Outcome.Rejected)}
-                                    disabled={isPending || isConfirming}
+                                    disabled={isPending || isConfirming || isSwitchingChain || !isOnBase}
                                     className="w-full pixel-btn pixel-btn-danger flex items-center justify-between group h-24"
                                 >
                                     <div className="text-left">
@@ -258,7 +238,7 @@ export default function ResolvePage() {
                                 <button
                                     type="button"
                                     onClick={() => handleDecision(Outcome.Punished)}
-                                    disabled={isPending || isConfirming}
+                                    disabled={isPending || isConfirming || isSwitchingChain || !isOnBase}
                                     className="w-full pixel-btn pixel-btn-danger flex items-center justify-between group h-24"
                                 >
                                     <div className="text-left">
@@ -274,9 +254,15 @@ export default function ResolvePage() {
                             </div>
                         )}
 
-                        {(isPending || isConfirming) && (
+                        {(isPending || isConfirming || isSwitchingChain || !isOnBase) && (
                             <div className="bg-yellow-400 border-4 border-black p-2 text-center font-pixel text-xs animate-pulse mt-4">
-                                {isPending ? 'ウォレットを確認中...' : '実行中...'}
+                                {isSwitchingChain
+                                  ? 'ネットワーク切替中...'
+                                  : !isOnBase
+                                    ? 'Base Sepolia へ切替してください'
+                                    : isPending
+                                      ? 'ウォレットを確認中...'
+                                      : '実行中...'}
                             </div>
                         )}
 

@@ -39,3 +39,5 @@ export function generateShareLink(apologyId: string | null): string {
   return `${typeof window !== 'undefined' ? window.location.origin : ''}/resolve/${apologyId}`;
 }
 
+
+
