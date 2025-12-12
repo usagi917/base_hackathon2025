@@ -1,0 +1,110 @@
+import { ImageResponse } from 'next/og';
+
+export const size = {
+  width: 1200,
+  height: 630,
+};
+
+export const contentType = 'image/png';
+
+export default function TwitterImage({ params }: { params: { id: string } }) {
+  const id = params.id ?? '';
+  const isValidId = /^\d+$/.test(id);
+  const badgeText = isValidId ? `#${id}` : 'INVALID';
+
+  return new ImageResponse(
+    (
+      <div
+        style={{
+          width: '1200px',
+          height: '630px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          padding: '64px',
+          backgroundColor: '#050505',
+          backgroundImage:
+            'linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)',
+          backgroundSize: '56px 56px',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '24px',
+            borderRadius: '28px',
+            border: '2px solid rgba(204,255,0,0.35)',
+            background:
+              'linear-gradient(135deg, rgba(204,255,0,0.14), rgba(217,70,239,0.10) 55%, rgba(6,182,212,0.10))',
+            padding: '44px',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.65)',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ fontSize: '18px', color: 'rgba(255,255,255,0.78)', letterSpacing: '0.6px' }}>
+                Proof of Regret
+              </div>
+              <div style={{ fontSize: '46px', color: '#CCFF00', fontWeight: 800, lineHeight: 1 }}>
+                審判を下す
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '10px 16px',
+                borderRadius: '999px',
+                border: '1px solid rgba(255,255,255,0.18)',
+                backgroundColor: 'rgba(0,0,0,0.35)',
+                color: 'rgba(255,255,255,0.92)',
+                fontSize: '18px',
+                fontWeight: 700,
+              }}
+            >
+              {badgeText}
+            </div>
+          </div>
+
+          <div style={{ fontSize: '26px', lineHeight: 1.35, color: 'rgba(255,255,255,0.92)' }}>
+            このリンクを開いた人が審判者になります。
+            <br />
+            選択ひとつで、供物（ETH）の行方が決まります。
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <div
+              style={{
+                padding: '12px 16px',
+                borderRadius: '14px',
+                border: '1px solid rgba(255,255,255,0.14)',
+                backgroundColor: 'rgba(0,0,0,0.35)',
+                color: 'rgba(255,255,255,0.88)',
+                fontSize: '18px',
+              }}
+            >
+              summary_large_image
+            </div>
+            <div
+              style={{
+                padding: '12px 16px',
+                borderRadius: '14px',
+                border: '1px solid rgba(255,255,255,0.14)',
+                backgroundColor: 'rgba(0,0,0,0.35)',
+                color: 'rgba(255,255,255,0.88)',
+                fontSize: '18px',
+              }}
+            >
+              Base Sepolia
+            </div>
+          </div>
+        </div>
+      </div>
+    ),
+    size
+  );
+}
+

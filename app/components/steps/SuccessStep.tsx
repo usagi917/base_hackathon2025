@@ -4,7 +4,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Share2, Check, CheckCircle2, Copy } from 'lucide-react';
+import { Share2, Check, CheckCircle2, Copy, ExternalLink } from 'lucide-react';
 import { generateShareLink } from '../../utils/transaction';
 
 interface SuccessStepProps {
@@ -14,12 +14,54 @@ interface SuccessStepProps {
 
 export function SuccessStep({ apologyId, onReset }: SuccessStepProps) {
   const [copied, setCopied] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
   const shareLink = generateShareLink(apologyId);
+  const canShare = typeof navigator !== 'undefined' && 'share' in navigator;
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(shareLink);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = async () => {
+    if (!shareLink) return;
+
+    setCopyFailed(false);
+    try {
+      await navigator.clipboard.writeText(shareLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback (older browsers / permission denied)
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = shareLink;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch {
+        setCopyFailed(true);
+        setTimeout(() => setCopyFailed(false), 2500);
+      }
+    }
+  };
+
+  const handleShare = async () => {
+    if (!shareLink) return;
+    if (!canShare) return;
+
+    try {
+      await navigator.share({
+        title: 'Proof of Regret',
+        text: '審判をお願いします。',
+        url: shareLink,
+      });
+    } catch (error) {
+      // AbortError = user canceled share sheet
+      if (error instanceof DOMException && error.name === 'AbortError') return;
+    }
   };
 
   return (
@@ -50,21 +92,62 @@ export function SuccessStep({ apologyId, onReset }: SuccessStepProps) {
           このリンクを相手に送り、審判を仰いでください。
         </p>
 
-        <div className="bg-[var(--md-sys-color-surface-variant)] rounded-lg p-2 mb-8 flex items-center gap-2">
-           <div className="flex-grow px-3 py-2 text-left overflow-x-auto whitespace-nowrap scrollbar-hide">
-             <span className="text-[var(--md-sys-color-on-surface-variant)] font-mono text-sm">
-               {shareLink}
-             </span>
-           </div>
-           
-           <button
-            type="button"
-            onClick={handleCopy}
-            className="material-btn material-btn-filled !rounded-lg !px-4 !py-2 flex items-center gap-2"
-           >
-             {copied ? <Check size={18} /> : <Copy size={18} />}
-             {copied ? 'コピー完了' : 'コピー'}
-           </button>
+        <div className="bg-[var(--md-sys-color-surface-variant)] rounded-lg p-4 mb-8">
+          <div className="flex flex-col md:flex-row items-stretch gap-3">
+            <div className="flex-grow px-3 py-3 text-left overflow-x-auto whitespace-nowrap rounded-md border border-[var(--md-sys-color-outline)] bg-[var(--md-sys-color-surface)]">
+              <span className="text-[var(--md-sys-color-on-surface-variant)] font-mono text-sm">
+                {shareLink}
+              </span>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleCopy}
+                disabled={!shareLink}
+                className="material-btn material-btn-filled !rounded-lg !px-4 !py-2 flex items-center gap-2 disabled:opacity-50 disabled:shadow-none"
+              >
+                {copied ? <Check size={18} /> : <Copy size={18} />}
+                {copied ? 'コピー完了' : 'コピー'}
+              </button>
+
+              <a
+                href={shareLink || '#'}
+                target="_blank"
+                rel="noreferrer"
+                className="material-btn material-btn-tonal !rounded-lg !px-4 !py-2 flex items-center gap-2"
+                aria-disabled={!shareLink}
+                onClick={(e) => {
+                  if (!shareLink) e.preventDefault();
+                }}
+              >
+                <ExternalLink size={18} />
+                開く
+              </a>
+
+              {canShare && (
+                <button
+                  type="button"
+                  onClick={handleShare}
+                  disabled={!shareLink}
+                  className="material-btn material-btn-outlined !rounded-lg !px-4 !py-2 flex items-center gap-2 disabled:opacity-50"
+                >
+                  <Share2 size={18} />
+                  共有
+                </button>
+              )}
+            </div>
+          </div>
+
+          {copyFailed && (
+            <div className="mt-3 text-sm text-[var(--md-sys-color-on-error-container)] bg-[var(--md-sys-color-error-container)] rounded-md px-3 py-2">
+              コピーに失敗しました。手動で選択してコピーしてください。
+            </div>
+          )}
+
+          <p className="mt-3 text-xs text-[var(--md-sys-color-on-surface-variant)] text-left">
+            注意：このリンクを知っている人なら誰でも審判できます。取り扱いに気をつけてください。
+          </p>
         </div>
 
         <div>
@@ -80,4 +163,3 @@ export function SuccessStep({ apologyId, onReset }: SuccessStepProps) {
     </motion.div>
   );
 }
-

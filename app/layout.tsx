@@ -23,9 +23,32 @@ const jetbrainsMono = JetBrains_Mono({
   variable: '--font-jetbrains-mono'
 });
 
+const metadataBase = (() => {
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL;
+  if (explicit) return new URL(explicit);
+
+  const vercel = process.env.VERCEL_URL;
+  if (vercel) return new URL(`https://${vercel}`);
+
+  return new URL('http://localhost:3000');
+})();
+
 export const metadata: Metadata = {
+  metadataBase,
   title: "Proof of Regret",
   description: "Words are cheap. Proof is on-chain.",
+  openGraph: {
+    title: "Proof of Regret",
+    description: "Words are cheap. Proof is on-chain.",
+    type: "website",
+    siteName: "Proof of Regret",
+    locale: "ja_JP",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Proof of Regret",
+    description: "Words are cheap. Proof is on-chain.",
+  },
 };
 
 export default function RootLayout({
