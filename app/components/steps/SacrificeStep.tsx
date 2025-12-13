@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, AlertTriangle } from 'lucide-react';
 import { ErrorDisplay } from '../ErrorDisplay';
 import { LoadingSpinner } from '../LoadingSpinner';
+import { CurrentEthBalance } from '../CurrentEthBalance';
 
 interface SacrificeStepProps {
   amount: string;
@@ -40,6 +41,11 @@ export function SacrificeStep({ amount, onAmountChange, onPrev, onDeposit, error
           <label className="text-[var(--color-pop-primary)] font-[family-name:var(--font-display)] uppercase tracking-widest text-sm mb-4">
             Sacrifice Amount (ETH)
           </label>
+
+          <CurrentEthBalance
+            className="mb-6 px-3 py-1 border border-[var(--color-pop-border)] bg-[var(--color-pop-surface)]/20"
+            label="WALLET BALANCE"
+          />
           
           <div className="relative flex items-baseline">
             <input

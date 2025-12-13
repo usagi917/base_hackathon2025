@@ -9,6 +9,7 @@ import {
 } from '@coinbase/onchainkit/wallet';
 import { Avatar, Name, Identity, Address, EthBalance } from '@coinbase/onchainkit/identity';
 import { motion } from 'framer-motion';
+import { CurrentEthBalance } from './CurrentEthBalance';
 
 export function Header() {
   return (
@@ -40,30 +41,36 @@ export function Header() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
-          <Wallet>
-            <ConnectWallet 
-              className="!bg-black !border !border-[var(--color-pop-border)] !text-[var(--color-pop-text)] !font-[family-name:var(--font-display)] !rounded-none hover:!border-[var(--color-pop-primary)] hover:!text-[var(--color-pop-primary)] transition-colors"
-            >
-              <Avatar className="h-6 w-6 rounded-none" />
-              <Name className="hidden sm:inline font-bold" />
-            </ConnectWallet>
-            <WalletDropdown 
-              className="!bg-[var(--color-pop-surface)] !border !border-[var(--color-pop-border)] !rounded-none !mt-2"
-            >
-              <Identity 
-                className="px-4 pt-4 pb-3 bg-[var(--color-pop-surface)] border-b border-[var(--color-pop-border)]" 
-                hasCopyAddressOnClick
+          <div className="flex items-center gap-3">
+            <CurrentEthBalance
+              className="hidden sm:inline-flex px-3 py-1 border border-[var(--color-pop-border)] bg-[var(--color-pop-surface)]/30"
+              label="BASE SEPOLIA"
+            />
+            <Wallet>
+              <ConnectWallet 
+                className="!bg-black !border !border-[var(--color-pop-border)] !text-[var(--color-pop-text)] !font-[family-name:var(--font-display)] !rounded-none hover:!border-[var(--color-pop-primary)] hover:!text-[var(--color-pop-primary)] transition-colors"
               >
-                <Avatar className="!w-12 !h-12 !rounded-none" />
-                <Name className="!font-bold !font-[family-name:var(--font-display)] !text-[var(--color-pop-text)]" />
-                <Address className="!text-[var(--color-pop-text-muted)]" />
-                <EthBalance className="!text-[var(--color-pop-primary)] !font-bold" />
-              </Identity>
-              <WalletDropdownDisconnect 
-                className="!m-0 !rounded-none !bg-black !text-[var(--color-pop-error)] hover:!bg-[var(--color-pop-error)]/10 !font-[family-name:var(--font-display)] uppercase !border-t !border-[var(--color-pop-border)]" 
-              />
-            </WalletDropdown>
-          </Wallet>
+                <Avatar className="h-6 w-6 rounded-none" />
+                <Name className="hidden sm:inline font-bold" />
+              </ConnectWallet>
+              <WalletDropdown 
+                className="!bg-[var(--color-pop-surface)] !border !border-[var(--color-pop-border)] !rounded-none !mt-2"
+              >
+                <Identity 
+                  className="px-4 pt-4 pb-3 bg-[var(--color-pop-surface)] border-b border-[var(--color-pop-border)]" 
+                  hasCopyAddressOnClick
+                >
+                  <Avatar className="!w-12 !h-12 !rounded-none" />
+                  <Name className="!font-bold !font-[family-name:var(--font-display)] !text-[var(--color-pop-text)]" />
+                  <Address className="!text-[var(--color-pop-text-muted)]" />
+                  <EthBalance className="!text-[var(--color-pop-primary)] !font-bold" />
+                </Identity>
+                <WalletDropdownDisconnect 
+                  className="!m-0 !rounded-none !bg-black !text-[var(--color-pop-error)] hover:!bg-[var(--color-pop-error)]/10 !font-[family-name:var(--font-display)] uppercase !border-t !border-[var(--color-pop-border)]" 
+                />
+              </WalletDropdown>
+            </Wallet>
+          </div>
         </motion.div>
       </div>
     </header>
