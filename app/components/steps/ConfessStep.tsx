@@ -2,7 +2,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Terminal } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 
 interface ConfessStepProps {
   message: string;
@@ -26,7 +26,6 @@ export function ConfessStep({ message, onMessageChange, onNext, onPrev }: Confes
       <div className="card-pop bg-black p-0 overflow-hidden border-[var(--color-pop-border)]">
         {/* Text Area */}
         <textarea
-          autoFocus
           className="w-full h-[320px] bg-black p-6 text-[var(--color-pop-text)] font-[family-name:var(--font-display)] text-base resize-none focus:outline-none leading-relaxed selection:bg-[var(--color-pop-primary)] selection:text-black placeholder:text-[var(--color-pop-text-muted)]/30"
           placeholder="TYPE YOUR REGRET HERE..."
           value={message}
@@ -43,6 +42,7 @@ export function ConfessStep({ message, onMessageChange, onNext, onPrev }: Confes
 
           <div className="flex gap-4 w-full sm:w-auto justify-end">
             <button
+              type="button"
               onClick={onPrev}
               className="btn-secondary text-xs py-2 px-4"
             >
@@ -50,6 +50,7 @@ export function ConfessStep({ message, onMessageChange, onNext, onPrev }: Confes
               BACK
             </button>
             <button
+              type="button"
               onClick={onNext}
               disabled={!isValid}
               className={`btn-primary text-xs py-2 px-6 ${!isValid ? 'opacity-50 cursor-not-allowed' : ''}`}
