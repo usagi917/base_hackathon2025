@@ -4,6 +4,7 @@ import { Noto_Sans_JP, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import '@coinbase/onchainkit/styles.css';
+import { ArtBackground } from "./components/ArtBackground";
 
 const notoSansJP = Noto_Sans_JP({ 
   weight: ["400", "500", "700", "900"], 
@@ -59,7 +60,10 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body className={`${notoSansJP.variable} ${inter.variable} ${jetbrainsMono.variable} bg-[var(--md-sys-color-background)] text-[var(--md-sys-color-on-background)] antialiased font-sans overflow-x-hidden`}>
-        <Providers>{children}</Providers>
+        <ArtBackground />
+        <div className="relative z-10">
+          <Providers>{children}</Providers>
+        </div>
       </body>
     </html>
   );

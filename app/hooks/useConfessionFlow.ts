@@ -1,7 +1,7 @@
 // 告白フロー管理用のカスタムフック
 
 // biome-ignore assist/source/organizeImports: explain why this is needed
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useSyncExternalStore } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseEther } from 'viem';
 import { REGRET_VAULT_ABI, REGRET_VAULT_ADDRESS } from '../constants';
@@ -12,6 +12,11 @@ import { useBaseChainGate } from './useBaseChainGate';
 
 export function useConfessionFlow() {
   const { isConnected } = useAccount();
+  const hasMounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
   const { ensureBaseChain, isSwitchingChain } = useBaseChainGate();
   const [userStep, setUserStep] = useState<Step>(Step.CONFESS);
   const [message, setMessage] = useState('');
@@ -20,6 +25,11 @@ export function useConfessionFlow() {
 
   const { data: hash, writeContract, isPending: isWriting, error: writeError } = useWriteContract();
   const { isLoading: isConfirming, isSuccess, data: receipt } = useWaitForTransactionReceipt({ hash });
+
+  // Wallet connection status can differ between server render and the first client render
+  // (wagmi may hydrate from persisted client state). Gate it until after mount to
+  // keep the initial HTML deterministic and avoid hydration mismatches.
+  const isWalletConnected = hasMounted ? isConnected : false;
 
   const apologyId = useMemo(() => {
     if (!isSuccess || !receipt || !hash) return null;
@@ -31,11 +41,11 @@ export function useConfessionFlow() {
   const isProcessing = isWriting || isConfirming;
 
   const step = useMemo(() => {
-    if (!isConnected) return Step.INTRO;
+    if (!isWalletConnected) return Step.INTRO;
     if (isProcessing) return Step.PROCESSING;
     if (apologyId) return Step.SUCCESS;
     return userStep;
-  }, [isConnected, isProcessing, apologyId, userStep]);
+  }, [isWalletConnected, isProcessing, apologyId, userStep]);
 
   const handleDeposit = async () => {
     // 新規送信前に成功結果をクリア
@@ -82,7 +92,7 @@ export function useConfessionFlow() {
     message,
     amount,
     apologyId,
-    isConnected,
+    isConnected: isWalletConnected,
     isPending: isWriting || isSwitchingChain,
     isConfirming,
     writeError,

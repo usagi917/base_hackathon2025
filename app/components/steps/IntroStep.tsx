@@ -1,84 +1,111 @@
-// イントロステップコンポーネント
-
+// Serious Pop Intro Step
 'use client';
 
 import { motion } from 'framer-motion';
-import { ArrowRight, Trophy, CheckCircle, Coins } from 'lucide-react';
+import { ArrowRight, Trophy, CheckCircle2, Coins } from 'lucide-react';
 
 interface IntroStepProps {
   isConnected: boolean;
 }
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }
+  },
+};
+
 export function IntroStep({ isConnected }: IntroStepProps) {
   return (
     <motion.div
       key="intro"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
       exit={{ opacity: 0, y: -20 }}
-      className="text-center space-y-12 max-w-5xl w-full"
+      className="w-full text-center space-y-8"
     >
-      <div className="space-y-6">
-        <h1 className="display-large text-[var(--md-sys-color-primary)] font-bold mb-4 tracking-tight">
-          後悔の証明
-        </h1>
-        <p className="headline-medium text-[var(--md-sys-color-secondary)] font-light max-w-2xl mx-auto">
-          言葉は安い。証明はオンチェーン。<br/>
-          <span className="text-base body-large mt-4 block text-[var(--md-sys-color-outline)]">
-            真の謝罪には、犠牲が伴う。
+      {/* Hero Section */}
+      <motion.div variants={itemVariants} className="space-y-4">
+        <h1 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tighter uppercase leading-[0.95]">
+          Words are <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-pop-text-muted)] to-white">Cheap.</span>
+          <br />
+          <span className="text-[var(--color-pop-primary)] glitch-hover cursor-default">
+            Proof is On-Chain.
           </span>
+        </h1>
+        
+        <p className="text-base md:text-lg text-[var(--color-pop-text-muted)] max-w-2xl mx-auto font-[family-name:var(--font-body)]">
+          口先だけの謝罪に価値はない。ブロックチェーンに<span className="text-[var(--color-pop-primary)] font-bold">ETH</span>を供物として捧げ、不可逆な誠意を証明せよ。
         </p>
 
-        <div className="mt-8 flex justify-center">
+        <motion.div variants={itemVariants} className="pt-2">
           {!isConnected ? (
-             <motion.div 
-               animate={{ scale: [1, 1.05, 1] }}
-               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-               className="flex flex-col items-center gap-2 text-[var(--md-sys-color-tertiary)]"
-             >
-               <p className="body-large font-medium">ウォレットを接続して開始</p>
-               <ArrowRight className="rotate-90" size={24} />
-             </motion.div>
+            <div className="inline-flex flex-col items-center gap-2">
+              <div className="px-5 py-2 border border-[var(--color-pop-primary)] text-[var(--color-pop-primary)] font-[family-name:var(--font-display)] uppercase tracking-widest text-xs animate-pulse">
+                Connect Wallet to Begin
+              </div>
+            </div>
           ) : (
-            <p className="text-[var(--md-sys-color-primary)] font-bold text-lg flex items-center gap-2 bg-[var(--md-sys-color-primary-container)] px-6 py-2 rounded-full">
-              <CheckCircle size={20} /> 準備完了
-            </p>
+            <div className="px-5 py-2 bg-[var(--color-pop-primary)] text-black font-bold font-[family-name:var(--font-display)] uppercase tracking-wider inline-block transform -skew-x-12 text-sm">
+              <span className="block transform skew-x-12">System Ready</span>
+            </div>
           )}
+        </motion.div>
+      </motion.div>
+
+      {/* Steps Grid */}
+      <motion.div variants={itemVariants} className="grid md:grid-cols-3 gap-4 text-left">
+        <StepCard 
+          number="01" 
+          title="Confess" 
+          desc="罪の告白" 
+          icon={<CheckCircle2 size={20} />}
+        />
+        <StepCard 
+          number="02" 
+          title="Sacrifice" 
+          desc="供物を捧げる" 
+          icon={<Coins size={20} />}
+          highlight
+        />
+        <StepCard 
+          number="03" 
+          title="Judgment" 
+          desc="審判を仰ぐ" 
+          icon={<Trophy size={20} />}
+        />
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function StepCard({ number, title, desc, icon, highlight }: { number: string; title: string; desc: string; icon: React.ReactNode; highlight?: boolean }) {
+  return (
+    <div className={`card-pop group transition-all duration-300 p-5 ${highlight ? 'border-[var(--color-pop-primary)]' : 'hover:border-[var(--color-pop-text-muted)]'}`}>
+      <div className="flex items-start justify-between mb-3">
+        <span className={`font-[family-name:var(--font-display)] text-3xl font-bold opacity-20 ${highlight ? 'text-[var(--color-pop-primary)]' : 'text-white'}`}>
+          {number}
+        </span>
+        <div className={`${highlight ? 'text-[var(--color-pop-primary)]' : 'text-[var(--color-pop-text-muted)]'} group-hover:text-white transition-colors`}>
+          {icon}
         </div>
       </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-         <div className="material-card p-6 hover:-translate-y-1">
-            <div className="w-12 h-12 rounded-full bg-[var(--md-sys-color-secondary-container)] flex items-center justify-center text-[var(--md-sys-color-on-secondary-container)] mb-4">
-              <CheckCircle size={24} />
-            </div>
-            <h3 className="text-xl font-bold mb-2 text-[var(--md-sys-color-on-surface)]">1. 告白</h3>
-            <p className="text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
-              ブロックチェーンに刻まれる言葉。<br/>
-              永遠に残る、あなたの真実。
-            </p>
-         </div>
-         <div className="material-card p-6 hover:-translate-y-1">
-            <div className="w-12 h-12 rounded-full bg-[var(--md-sys-color-secondary-container)] flex items-center justify-center text-[var(--md-sys-color-on-secondary-container)] mb-4">
-              <Coins size={24} />
-            </div>
-            <h3 className="text-xl font-bold mb-2 text-[var(--md-sys-color-on-surface)]">2. 供物</h3>
-            <p className="text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
-              誠意の証明としてETHをロック。<br/>
-              言葉だけではない、重みを。
-            </p>
-         </div>
-         <div className="material-card p-6 hover:-translate-y-1">
-            <div className="w-12 h-12 rounded-full bg-[var(--md-sys-color-secondary-container)] flex items-center justify-center text-[var(--md-sys-color-on-secondary-container)] mb-4">
-              <Trophy size={24} />
-            </div>
-            <h3 className="text-xl font-bold mb-2 text-[var(--md-sys-color-on-surface)]">3. 償還</h3>
-            <p className="text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
-              相手が受け入れれば返却される。<br/>
-              拒絶されれば、失う。
-            </p>
-         </div>
-      </div>
-    </motion.div>
+      <h3 className="text-lg font-bold uppercase tracking-wider mb-1 font-[family-name:var(--font-display)]">{title}</h3>
+      <p className="text-xs text-[var(--color-pop-text-muted)]">{desc}</p>
+    </div>
   );
 }

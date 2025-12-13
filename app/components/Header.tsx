@@ -1,8 +1,6 @@
-// 共通ヘッダーコンポーネント
-
+// Serious Pop Header
 'use client';
 
-// biome-ignore assist/source/organizeImports: <explanation>
 import {
   ConnectWallet,
   Wallet,
@@ -10,36 +8,63 @@ import {
   WalletDropdownDisconnect,
 } from '@coinbase/onchainkit/wallet';
 import { Avatar, Name, Identity, Address, EthBalance } from '@coinbase/onchainkit/identity';
+import { motion } from 'framer-motion';
 
 export function Header() {
   return (
-    <header className="fixed top-0 left-0 w-full z-50 bg-[var(--md-sys-color-background)]/80 backdrop-blur-md border-b border-[var(--md-sys-color-outline)] transition-all duration-300">
-      <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-        {/* Logo */}
-        <div className="flex items-center">
-          <h1 className="text-xl font-bold tracking-tight text-[var(--md-sys-color-primary)] font-sans">
-            後悔の証明 <span className="font-light text-[var(--md-sys-color-secondary)] ml-2 text-sm hidden sm:inline">Proof of Regret</span>
-          </h1>
-        </div>
+    <header className="fixed top-0 left-0 right-0 z-50 border-b border-[var(--color-pop-border)] bg-[var(--color-pop-bg)]/80 backdrop-blur-md">
+      <div className="por-container h-16 flex items-center justify-between">
+        {/* Leading: Brand */}
+        <motion.div 
+          className="flex items-center gap-3"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+        >
+          {/* Logo mark */}
+          <div className="relative w-8 h-8 flex items-center justify-center bg-[var(--color-pop-primary)] text-black font-bold font-[family-name:var(--font-display)]">
+            PoR
+          </div>
+          
+          {/* Title section */}
+          <div className="hidden sm:block">
+            <h1 className="text-lg font-bold uppercase tracking-wider text-[var(--color-pop-text)] font-[family-name:var(--font-display)]">
+              Proof of Regret
+            </h1>
+          </div>
+        </motion.div>
 
-        {/* Wallet / Player Stats */}
-        <div className="flex items-center gap-4">
+        {/* Trailing: Actions */}
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
+        >
           <Wallet>
-            <ConnectWallet className="!bg-[var(--md-sys-color-primary-container)] !text-[var(--md-sys-color-on-primary-container)] !font-medium !rounded-full !px-4 !py-2 hover:!bg-[var(--md-sys-color-primary)] hover:!text-white transition-all shadow-sm">
-              <Avatar className="h-6 w-6 rounded-full mr-2" />
-              <Name className="text-sm font-medium" />
+            <ConnectWallet 
+              className="!bg-black !border !border-[var(--color-pop-border)] !text-[var(--color-pop-text)] !font-[family-name:var(--font-display)] !rounded-none hover:!border-[var(--color-pop-primary)] hover:!text-[var(--color-pop-primary)] transition-colors"
+            >
+              <Avatar className="h-6 w-6 rounded-none" />
+              <Name className="hidden sm:inline font-bold" />
             </ConnectWallet>
-            <WalletDropdown className="!rounded-2xl !shadow-lg !border-none !mt-2 overflow-hidden">
-              <Identity className="px-4 pt-4 pb-3 bg-[var(--md-sys-color-surface)]" hasCopyAddressOnClick>
-                <Avatar />
-                <Name />
-                <Address />
-                <EthBalance />
+            <WalletDropdown 
+              className="!bg-[var(--color-pop-surface)] !border !border-[var(--color-pop-border)] !rounded-none !mt-2"
+            >
+              <Identity 
+                className="px-4 pt-4 pb-3 bg-[var(--color-pop-surface)] border-b border-[var(--color-pop-border)]" 
+                hasCopyAddressOnClick
+              >
+                <Avatar className="!w-12 !h-12 !rounded-none" />
+                <Name className="!font-bold !font-[family-name:var(--font-display)] !text-[var(--color-pop-text)]" />
+                <Address className="!text-[var(--color-pop-text-muted)]" />
+                <EthBalance className="!text-[var(--color-pop-primary)] !font-bold" />
               </Identity>
-              <WalletDropdownDisconnect className="!bg-[var(--md-sys-color-error-container)] !text-[var(--md-sys-color-on-error-container)] hover:!bg-[var(--md-sys-color-error)] hover:!text-white transition-colors" />
+              <WalletDropdownDisconnect 
+                className="!m-0 !rounded-none !bg-black !text-[var(--color-pop-error)] hover:!bg-[var(--color-pop-error)]/10 !font-[family-name:var(--font-display)] uppercase !border-t !border-[var(--color-pop-border)]" 
+              />
             </WalletDropdown>
           </Wallet>
-        </div>
+        </motion.div>
       </div>
     </header>
   );

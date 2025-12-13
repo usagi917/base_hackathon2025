@@ -8,9 +8,18 @@ export const size = {
 export const contentType = 'image/png';
 
 export default function TwitterImage({ params }: { params: { id: string } }) {
-  const id = params.id ?? '';
-  const isValidId = /^\d+$/.test(id);
-  const badgeText = isValidId ? `#${id}` : 'INVALID';
+  const rawId = params.id ?? '';
+  const decodedId = (() => {
+    try {
+      return decodeURIComponent(rawId);
+    } catch {
+      return rawId;
+    }
+  })();
+
+  const normalizedId = /^\d+$/.test(decodedId) ? decodedId : decodedId.match(/^(\d+)\W+$/u)?.[1] ?? decodedId;
+  const isValidId = /^\d+$/.test(normalizedId);
+  const badgeText = isValidId ? `#${normalizedId}` : 'INVALID';
 
   return new ImageResponse(
     (
@@ -107,4 +116,3 @@ export default function TwitterImage({ params }: { params: { id: string } }) {
     size
   );
 }
-

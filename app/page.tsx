@@ -1,9 +1,11 @@
+// Serious Pop Layout
 'use client';
 
 import { useConfessionFlow } from './hooks/useConfessionFlow';
 import { Step } from './types';
 import { AnimatePresence } from 'framer-motion';
 import { Header } from './components/Header';
+import { StepProgress } from './components/StepProgress';
 import { IntroStep } from './components/steps/IntroStep';
 import { ConfessStep } from './components/steps/ConfessStep';
 import { SacrificeStep } from './components/steps/SacrificeStep';
@@ -28,49 +30,52 @@ export default function Home() {
   } = useConfessionFlow();
 
   return (
-    <main className="relative min-h-screen w-full flex flex-col">
-      
-      {/* Header */}
+    <main className="relative min-h-screen w-full flex flex-col overflow-hidden">
       <Header />
 
-      {/* Main Game Stage */}
-      <div className="relative z-10 flex-grow flex flex-col items-center justify-center p-4 py-24 md:py-32">
-        <AnimatePresence mode="wait">
-          {step === Step.INTRO && (
-            <IntroStep isConnected={isConnected} />
-          )}
+      <div className="relative z-10 w-full flex-1 flex flex-col justify-center">
+        <div className="por-container pt-20 pb-8 max-w-5xl mx-auto w-full flex flex-col justify-center min-h-[calc(100vh-80px)]">
+          <div className="space-y-6">
+            <StepProgress step={step} />
 
-          {step === Step.CONFESS && (
-            <ConfessStep
-              message={message}
-              onMessageChange={setMessage}
-              onNext={nextStep}
-              onPrev={prevStep}
-            />
-          )}
+            <AnimatePresence mode="wait">
+              {step === Step.INTRO && (
+                <IntroStep isConnected={isConnected} />
+              )}
 
-          {step === Step.SACRIFICE && (
-            <SacrificeStep
-              amount={amount}
-              onAmountChange={setAmount}
-              onPrev={prevStep}
-              onDeposit={handleDeposit}
-              error={writeError}
-              isLoading={isPending}
-            />
-          )}
+              {step === Step.CONFESS && (
+                <ConfessStep
+                  message={message}
+                  onMessageChange={setMessage}
+                  onNext={nextStep}
+                  onPrev={prevStep}
+                />
+              )}
 
-          {step === Step.PROCESSING && (
-            <ProcessingStep />
-          )}
+              {step === Step.SACRIFICE && (
+                <SacrificeStep
+                  amount={amount}
+                  onAmountChange={setAmount}
+                  onPrev={prevStep}
+                  onDeposit={handleDeposit}
+                  error={writeError}
+                  isLoading={isPending}
+                />
+              )}
 
-          {step === Step.SUCCESS && (
-            <SuccessStep
-              apologyId={apologyId}
-              onReset={resetFlow}
-            />
-          )}
-        </AnimatePresence>
+              {step === Step.PROCESSING && (
+                <ProcessingStep />
+              )}
+
+              {step === Step.SUCCESS && (
+                <SuccessStep
+                  apologyId={apologyId}
+                  onReset={resetFlow}
+                />
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
       </div>
     </main>
   );

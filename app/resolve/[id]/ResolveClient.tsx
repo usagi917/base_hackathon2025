@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import { formatEther } from 'viem';
 import clsx from 'clsx';
-import { motion } from 'framer-motion';
-import { AlertTriangle, CheckCircle2, Shield, Skull, Sword, Wallet as WalletIcon } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { AlertTriangle, Check, CheckCircle2, Lock, Shield, Skull, Sword, Wallet as WalletIcon, ArrowLeft } from 'lucide-react';
 import { ConnectWallet, Wallet } from '@coinbase/onchainkit/wallet';
 
 import { REGRET_VAULT_ABI, REGRET_VAULT_ADDRESS } from '../../constants';
@@ -29,37 +30,120 @@ function shortenAddress(address?: string, head = 6, tail = 4) {
 function outcomeLabel(outcome: Outcome) {
   switch (outcome) {
     case Outcome.Forgiven:
-      return '許された';
+      return 'FORGIVEN';
     case Outcome.Rejected:
-      return '拒否された';
+      return 'REJECTED';
     case Outcome.Punished:
-      return '罰を受けた';
+      return 'PUNISHED';
     default:
-      return '審判待ち';
+      return 'PENDING';
   }
 }
 
+const DECISION_OPTIONS = [
+  {
+    outcome: Outcome.Forgiven,
+    title: 'FORGIVE',
+    subtitle: 'ACCEPT OFFERING',
+    description: 'The offering (ETH) is sent to you (the judge).',
+    icon: Shield,
+    color: 'var(--color-pop-primary)',
+  },
+  {
+    outcome: Outcome.Rejected,
+    title: 'REJECT',
+    subtitle: 'RETURN TO SENDER',
+    description: 'The offering is returned to the sender. You get nothing.',
+    icon: Sword,
+    color: '#ffffff',
+  },
+  {
+    outcome: Outcome.Punished,
+    title: 'PUNISH',
+    subtitle: 'BURN FOREVER',
+    description: 'The offering is burned. No one gets it.',
+    icon: Skull,
+    color: 'var(--color-pop-error)',
+  },
+] as const;
+
 export function ResolveClient({ rawId }: ResolveClientProps) {
-  const apologyId = useMemo(() => {
-    if (!rawId) return null;
-    if (!/^\d+$/.test(rawId)) return null;
+  const router = useRouter();
+  const [fallbackRawId, setFallbackRawId] = useState<string | null>(null);
+
+  const decodedId = useMemo(() => {
     try {
-      return BigInt(rawId);
+      return decodeURIComponent(rawId);
     } catch {
-      return null;
+      return rawId;
     }
   }, [rawId]);
 
-  const { isConnected } = useAccount();
+  const looksLikeValidParam = useMemo(() => {
+    return /^\d+$/.test(decodedId) || /^(\d+)\W+$/u.test(decodedId);
+  }, [decodedId]);
+
+  useEffect(() => {
+    if (fallbackRawId) return;
+    if (looksLikeValidParam) return;
+    if (typeof window === 'undefined') return;
+
+    const match = window.location.pathname.match(/^\/resolve\/([^/?#]+)/);
+    if (match?.[1]) setFallbackRawId(match[1]);
+  }, [fallbackRawId, looksLikeValidParam]);
+
+  const candidateRawId = fallbackRawId ?? rawId;
+
+  const decodedCandidateId = useMemo(() => {
+    try {
+      return decodeURIComponent(candidateRawId);
+    } catch {
+      return candidateRawId;
+    }
+  }, [candidateRawId]);
+
+  const normalizedId = useMemo(() => {
+    if (/^\d+$/.test(decodedCandidateId)) return decodedCandidateId;
+    const match = decodedCandidateId.match(/^(\d+)\W+$/u);
+    return match?.[1] ?? null;
+  }, [decodedCandidateId]);
+
+  const needsNormalization = normalizedId !== null && decodedCandidateId !== normalizedId;
+
+  useEffect(() => {
+    if (!needsNormalization || !normalizedId) return;
+    router.replace(`/resolve/${normalizedId}`);
+  }, [needsNormalization, normalizedId, router]);
+
+  const apologyId = useMemo(() => {
+    if (!normalizedId) return null;
+    try {
+      return BigInt(normalizedId);
+    } catch {
+      return null;
+    }
+  }, [normalizedId]);
+
+  const { isConnected, address } = useAccount();
   const { ensureBaseChain, isSwitchingChain, isOnBase } = useBaseChainGate();
+  const [selectedDecision, setSelectedDecision] = useState<Outcome | null>(null);
   const [pendingDangerDecision, setPendingDangerDecision] = useState<Outcome | null>(null);
+  const [burnConfirmText, setBurnConfirmText] = useState('');
+
+  const hasMounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+  const isWalletConnected = hasMounted ? isConnected : false;
+  const walletAddress = hasMounted ? address : undefined;
 
   const { data: apology, isLoading: isReading, refetch: refetchApology } = useReadContract({
     address: REGRET_VAULT_ADDRESS,
     abi: REGRET_VAULT_ABI,
     functionName: 'getApology',
     args: [apologyId ?? BigInt(0)],
-    query: { enabled: apologyId !== null, refetchInterval: 2000 }, // 2秒ごとに自動再フェッチ
+    query: { enabled: apologyId !== null, refetchInterval: 5000 },
   });
 
   const { data: hash, writeContract, isPending, error: writeError } = useWriteContract();
@@ -69,13 +153,11 @@ export function ResolveClient({ rawId }: ResolveClientProps) {
   const outcomeInt = useMemo(() => Number(apologyData?.outcome ?? Outcome.Pending), [apologyData]);
   const existsOnChain = useMemo(() => {
     if (!apologyData) return false;
-    // getApology() は存在しないIDでもデフォルト値を返すため、timestamp で存在判定する
     return apologyData.timestamp !== BigInt(0);
   }, [apologyData]);
 
   const isBusy = isPending || isConfirming || isSwitchingChain;
 
-  // トランザクションが成功したら即座に再フェッチ
   useEffect(() => {
     if (isTransactionSuccess) {
       refetchApology();
@@ -84,7 +166,6 @@ export function ResolveClient({ rawId }: ResolveClientProps) {
 
   const handleDecision = async (decision: Outcome) => {
     if (!apologyId) return;
-
     const send = () =>
       writeContract({
         address: REGRET_VAULT_ADDRESS,
@@ -92,61 +173,44 @@ export function ResolveClient({ rawId }: ResolveClientProps) {
         functionName: 'resolve',
         args: [apologyId, decision],
       });
-
     await ensureBaseChain(send);
   };
 
-  if (!rawId || apologyId === null) {
+  if (isReading || needsNormalization) {
     return (
-      <main className="relative min-h-screen w-full flex flex-col">
-        <Header />
-        <div className="relative z-10 flex-grow flex items-center justify-center p-4 py-24 md:py-32">
-          <div className="w-full max-w-xl material-card p-8 text-center">
-            <h1 className="headline-medium font-bold text-[var(--md-sys-color-on-surface)] mb-2">
-              リンクが不正です
-            </h1>
-            <p className="body-large text-[var(--md-sys-color-on-surface-variant)]">
-              共有URLを確認して、もう一度開いてください。
-            </p>
-          </div>
-        </div>
-      </main>
-    );
-  }
-
-  if (isReading) {
-    return (
-      <main className="relative min-h-screen w-full flex flex-col">
-        <Header />
-        <div className="relative z-10 flex-grow flex items-center justify-center p-4 py-24 md:py-32">
-          <div className="w-full max-w-xl material-card p-10 text-center">
-            <div className="flex justify-center mb-6 text-[var(--md-sys-color-primary)]">
-              <LoadingSpinner size="lg" />
-            </div>
-            <h1 className="headline-medium text-[var(--md-sys-color-on-surface)] mb-2">読み込み中...</h1>
-            <p className="body-large text-[var(--md-sys-color-on-surface-variant)]">
-              ブロックチェーンから内容を取得しています。
-            </p>
-          </div>
-        </div>
+      <main className="min-h-screen bg-black flex items-center justify-center">
+        <LoadingSpinner size="lg" />
       </main>
     );
   }
 
   if (!apologyData || !existsOnChain) {
     return (
-      <main className="relative min-h-screen w-full flex flex-col">
+      <main className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
+        <h1 className="text-white font-[family-name:var(--font-display)] text-2xl mb-4 uppercase">Proof Not Found</h1>
+        <Link href="/" className="btn-secondary">Back to Home</Link>
+      </main>
+    );
+  }
+
+  // ALREADY RESOLVED
+  if (outcomeInt !== Outcome.Pending) {
+    return (
+      <main className="min-h-screen bg-black flex flex-col">
         <Header />
-        <div className="relative z-10 flex-grow flex items-center justify-center p-4 py-24 md:py-32">
-          <div className="w-full max-w-xl material-card p-8 text-center">
-            <h1 className="headline-medium font-bold text-[var(--md-sys-color-on-surface)] mb-2">
-              証明が見つかりません
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="card-pop bg-black border-[var(--color-pop-secondary)] p-12 text-center max-w-2xl w-full">
+            <div className="w-24 h-24 rounded-full bg-[var(--color-pop-secondary)] text-white flex items-center justify-center mx-auto mb-6">
+              <CheckCircle2 size={48} />
+            </div>
+            <h1 className="text-4xl font-black uppercase text-white font-[family-name:var(--font-display)] mb-2">
+              {outcomeLabel(outcomeInt as Outcome)}
             </h1>
-            <p className="body-large text-[var(--md-sys-color-on-surface-variant)] mb-6">
-              IDが間違っているか、まだ反映されていない可能性があります。
+            <p className="text-[var(--color-pop-text-muted)] mb-8">
+              This proof has already been judged.
             </p>
-            <Link href="/" className="material-btn material-btn-outlined">
-              トップへ戻る
+            <Link href="/" className="btn-primary inline-flex">
+              CREATE NEW PROOF
             </Link>
           </div>
         </div>
@@ -154,243 +218,181 @@ export function ResolveClient({ rawId }: ResolveClientProps) {
     );
   }
 
-  // Resolution Screen (Outcome)
-  if (outcomeInt !== Outcome.Pending) {
-    return (
-      <main className="relative min-h-screen w-full flex flex-col">
-        <Header />
-
-        <div className="relative z-10 flex-grow flex flex-col items-center justify-center p-4 py-24 md:py-32">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-2xl">
-            <div className="material-card p-10 text-center">
-              <div className="flex justify-center mb-6">
-                <div className="w-20 h-20 rounded-full bg-[var(--md-sys-color-primary-container)] flex items-center justify-center text-[var(--md-sys-color-primary)]">
-                  <CheckCircle2 size={44} />
-                </div>
-              </div>
-
-              <h1 className="headline-medium font-bold text-[var(--md-sys-color-on-surface)] mb-2">
-                {outcomeLabel(outcomeInt as Outcome)}
-              </h1>
-              <p className="body-large text-[var(--md-sys-color-on-surface-variant)] mb-8">
-                この証明はすでに審判済みです。
-              </p>
-
-              <div className="flex justify-center">
-                <Link href="/" className="material-btn material-btn-filled">
-                  新しい証明を作成
-                </Link>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </main>
-    );
-  }
-
-  const statusMessage = isSwitchingChain
-    ? 'ネットワーク切替中...'
-    : isPending
-      ? 'ウォレットを確認してください...'
-      : isConfirming
-        ? 'トランザクション処理中...'
-        : null;
-
-  // Active Screen (Judgment)
+  // JUDGMENT INTERFACE
   return (
-    <main className="relative min-h-screen w-full flex flex-col">
+    <main className="min-h-screen bg-black text-white flex flex-col overflow-hidden">
       <Header />
 
-      <div className="relative z-10 flex-grow flex flex-col items-center justify-center p-4 py-24 md:py-32">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-5xl">
-          <div className="mb-8 text-center">
-            <h1 className="display-large text-[var(--md-sys-color-primary)] font-bold mb-3">審判を下す</h1>
-            <p className="headline-medium text-[var(--md-sys-color-on-surface-variant)] max-w-3xl mx-auto">
-              このリンクを開いたアカウントが審判者になります。
-              <br />
-              あなたの選択で供物（ETH）の行方が決まります。
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-            <div className="material-card p-8">
-              <div className="flex items-start justify-between gap-4 mb-6">
-                <div>
-                  <p className="text-sm text-[var(--md-sys-color-outline)] mb-1">供物</p>
-                  <div className="text-4xl font-bold text-[var(--md-sys-color-on-surface)]">
-                    {formatEther(apologyData.amount)}{' '}
-                    <span className="text-base font-medium text-[var(--md-sys-color-on-surface-variant)]">ETH</span>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-[var(--md-sys-color-outline)] mb-1">送信者</p>
-                  <div className="font-mono text-sm px-3 py-2 rounded-md bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface)]">
-                    {shortenAddress(apologyData.sender)}
-                  </div>
+      <div className="flex-1 flex flex-col justify-center p-4 md:p-8 lg:p-12">
+        <div className="w-full max-w-[1600px] mx-auto grid lg:grid-cols-[1fr_420px] gap-8 h-full min-h-[600px]">
+          
+          {/* LEFT: CONTEXT */}
+          <div className="flex flex-col gap-6 h-full">
+            {/* Amount & Sender Header */}
+            <div className="flex justify-between items-end border-b border-[var(--color-pop-border)] pb-6">
+              <div>
+                <span className="text-[var(--color-pop-text-muted)] text-sm font-mono uppercase tracking-wider block mb-2">Offering</span>
+                <div className="text-6xl md:text-8xl font-black font-[family-name:var(--font-display)] text-white leading-none">
+                  {formatEther(apologyData.amount)} <span className="text-2xl text-[var(--color-pop-text-muted)]">ETH</span>
                 </div>
               </div>
-
-              <div className="rounded-lg bg-[var(--md-sys-color-surface-variant)] border border-[var(--md-sys-color-outline)] p-4">
-                <p className="text-sm text-[var(--md-sys-color-outline)] mb-2">メッセージ</p>
-                <p className="whitespace-pre-wrap text-[var(--md-sys-color-on-surface)] leading-relaxed">
-                  {apologyData.message || '（メッセージなし）'}
-                </p>
+              <div className="text-right">
+                <span className="text-[var(--color-pop-text-muted)] text-sm font-mono uppercase tracking-wider block mb-2">Sender</span>
+                <div className="bg-[var(--color-pop-surface)] px-4 py-2 text-sm font-mono text-[var(--color-pop-primary)] border border-[var(--color-pop-border)]">
+                  {shortenAddress(apologyData.sender)}
+                </div>
               </div>
             </div>
 
-            <div className="material-card p-8">
-              <div className="mb-6">
-                <h2 className="headline-medium text-[var(--md-sys-color-on-surface)] mb-2">アクション</h2>
-                <p className="text-[var(--md-sys-color-on-surface-variant)]">一度だけ選べます。やり直しはできません。</p>
+            {/* Message Area */}
+            <div className="flex-1 border border-[var(--color-pop-border)] bg-[var(--color-pop-surface)]/30 p-8 relative overflow-hidden group">
+              <span className="absolute top-4 left-4 text-[var(--color-pop-text-muted)] text-xs font-mono uppercase tracking-wider">/ MESSAGE_LOG.TXT</span>
+              <div className="h-full overflow-y-auto pt-8 font-[family-name:var(--font-display)] text-lg md:text-xl leading-relaxed whitespace-pre-wrap">
+                {apologyData.message || 'NO MESSAGE ATTACHED'}
               </div>
-
-              {!isConnected && (
-                <div className="rounded-lg border border-[var(--md-sys-color-outline)] bg-[var(--md-sys-color-surface-variant)] p-4 mb-6">
-                  <div className="flex items-start gap-3">
-                    <WalletIcon className="text-[var(--md-sys-color-primary)] mt-0.5" size={20} />
-                    <div className="flex-1">
-                      <p className="font-bold text-[var(--md-sys-color-on-surface)] mb-1">
-                        審判するにはウォレット接続が必要です
-                      </p>
-                      <p className="text-sm text-[var(--md-sys-color-on-surface-variant)] mb-3">
-                        接続したアカウントが審判者になります。
-                      </p>
-                      <Wallet>
-                        <ConnectWallet className="material-btn material-btn-filled !px-4 !py-2 w-full justify-center">
-                          ウォレットを接続
-                        </ConnectWallet>
-                      </Wallet>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {isConnected && !isOnBase && (
-                <div className="rounded-lg border border-[var(--md-sys-color-outline)] bg-[var(--md-sys-color-surface-variant)] p-4 mb-6">
-                  <div className="flex items-start gap-3">
-                    <AlertTriangle className="text-[var(--md-sys-color-primary)] mt-0.5" size={20} />
-                    <div className="flex-1">
-                      <p className="font-bold text-[var(--md-sys-color-on-surface)] mb-1">
-                        Base Sepolia に切り替えてください
-                      </p>
-                      <p className="text-sm text-[var(--md-sys-color-on-surface-variant)] mb-3">
-                        ボタンを押すとネットワーク切替をリクエストします。
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => ensureBaseChain()}
-                        className="material-btn material-btn-outlined w-full justify-center"
-                        disabled={isBusy}
-                      >
-                        {isSwitchingChain ? <LoadingSpinner size="sm" /> : 'Base Sepolia へ切替'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-3">
-                <button
-                  type="button"
-                  onClick={() => handleDecision(Outcome.Forgiven)}
-                  disabled={!isConnected || isBusy}
-                  className={clsx(
-                    'material-btn w-full !justify-between !px-5',
-                    'material-btn-filled disabled:opacity-50 disabled:shadow-none'
-                  )}
-                >
-                  <span className="flex items-center gap-3">
-                    <Shield size={18} />
-                    許す
-                  </span>
-                  <span className="text-xs opacity-80">供物を受け取る</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleDecision(Outcome.Rejected)}
-                  disabled={!isConnected || isBusy}
-                  className={clsx(
-                    'material-btn w-full !justify-between !px-5',
-                    'material-btn-tonal disabled:opacity-50 disabled:shadow-none'
-                  )}
-                >
-                  <span className="flex items-center gap-3">
-                    <Sword size={18} />
-                    拒否
-                  </span>
-                  <span className="text-xs opacity-80">送信者に返却</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setPendingDangerDecision(Outcome.Punished)}
-                  disabled={!isConnected || isBusy}
-                  className={clsx(
-                    'material-btn w-full !justify-between !px-5',
-                    'material-btn-outlined disabled:opacity-50 disabled:shadow-none',
-                    'border-[var(--md-sys-color-error)] text-[var(--md-sys-color-error)] hover:bg-[rgba(255,68,68,0.12)]'
-                  )}
-                >
-                  <span className="flex items-center gap-3">
-                    <Skull size={18} />
-                    罰する
-                  </span>
-                  <span className="text-xs opacity-80">永久に焼却</span>
-                </button>
-              </div>
-
-              {statusMessage && (
-                <div className="mt-5 text-center text-sm text-[var(--md-sys-color-on-surface-variant)]">{statusMessage}</div>
-              )}
-
-              {writeError && <ErrorDisplay error={writeError} className="mt-5" />}
+              {/* Corner accents */}
+              <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-[var(--color-pop-primary)]" />
+              <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-[var(--color-pop-primary)]" />
+              <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-[var(--color-pop-primary)]" />
+              <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-[var(--color-pop-primary)]" />
             </div>
           </div>
-        </motion.div>
+
+          {/* RIGHT: ACTION PANEL */}
+          <div className="flex flex-col h-full gap-4">
+            <div className="mb-2">
+              <h2 className="text-xl font-bold uppercase font-[family-name:var(--font-display)]">Judgment</h2>
+              <p className="text-[var(--color-pop-text-muted)] text-sm">Choose wisely. No take-backs.</p>
+            </div>
+
+            {/* Wallet Guard */}
+            {!isWalletConnected ? (
+              <div className="flex-1 flex flex-col items-center justify-center border border-[var(--color-pop-border)] bg-[var(--color-pop-surface)] p-6 text-center">
+                <WalletIcon size={48} className="text-[var(--color-pop-text-muted)] mb-4" />
+                <p className="mb-6 font-bold">Connect Wallet to Judge</p>
+                <Wallet>
+                   <ConnectWallet className="btn-primary w-full justify-center">CONNECT</ConnectWallet>
+                </Wallet>
+              </div>
+            ) : !isOnBase ? (
+              <div className="flex-1 flex flex-col items-center justify-center border border-[var(--color-pop-error)] bg-[var(--color-pop-error)]/10 p-6 text-center">
+                <AlertTriangle size={48} className="text-[var(--color-pop-error)] mb-4" />
+                <p className="mb-6 font-bold text-[var(--color-pop-error)]">Switch to Base Sepolia</p>
+                <button onClick={() => ensureBaseChain()} className="btn-secondary w-full">SWITCH NETWORK</button>
+              </div>
+            ) : (
+              // DECISION CARDS
+              <div className="flex-1 flex flex-col gap-3">
+                {DECISION_OPTIONS.map((option) => {
+                  const isSelected = selectedDecision === option.outcome;
+                  const Icon = option.icon;
+                  return (
+                    <button
+                      key={option.outcome}
+                      onClick={() => setSelectedDecision(option.outcome)}
+                      disabled={isBusy}
+                      className={clsx(
+                        "group relative flex items-center gap-4 p-5 w-full text-left transition-all duration-200 border",
+                        isSelected 
+                          ? "bg-[var(--color-pop-surface)] border-[var(--color-pop-primary)] shadow-[0_0_15px_rgba(204,255,0,0.2)]"
+                          : "bg-black border-[var(--color-pop-border)] hover:border-[var(--color-pop-text-muted)]"
+                      )}
+                    >
+                      <div className={clsx(
+                        "w-12 h-12 flex items-center justify-center border transition-colors",
+                        isSelected 
+                          ? "bg-[var(--color-pop-primary)] text-black border-[var(--color-pop-primary)]"
+                          : "bg-black text-[var(--color-pop-text-muted)] border-[var(--color-pop-border)] group-hover:text-white"
+                      )}>
+                        <Icon size={24} />
+                      </div>
+                      <div className="flex-1">
+                        <div className={clsx(
+                          "text-lg font-black font-[family-name:var(--font-display)] uppercase",
+                          isSelected ? "text-[var(--color-pop-primary)]" : "text-white"
+                        )}>
+                          {option.title}
+                        </div>
+                        <div className="text-xs text-[var(--color-pop-text-muted)] font-mono">
+                          {option.subtitle}
+                        </div>
+                      </div>
+                      {isSelected && <div className="w-2 h-full absolute left-0 top-0 bg-[var(--color-pop-primary)]" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* PREVIEW & CONFIRM */}
+            <div className="bg-[var(--color-pop-surface)] border border-[var(--color-pop-border)] p-5 mt-auto">
+               <div className="flex justify-between items-end mb-4">
+                 <span className="text-xs font-mono text-[var(--color-pop-text-muted)] uppercase">Preview</span>
+                 <div className="text-right">
+                   <div className="text-xs text-[var(--color-pop-text-muted)]">Result</div>
+                   <div className="font-bold text-white">
+                     {selectedDecision ? DECISION_OPTIONS.find(d => d.outcome === selectedDecision)?.title : 'WAITING...'}
+                   </div>
+                 </div>
+               </div>
+
+               <button
+                  onClick={async () => {
+                    if (!selectedDecision) return;
+                    if (selectedDecision === Outcome.Punished) {
+                      setPendingDangerDecision(Outcome.Punished);
+                      return;
+                    }
+                    await handleDecision(selectedDecision);
+                  }}
+                  disabled={!selectedDecision || isBusy || !isWalletConnected}
+                  className={clsx(
+                    "w-full btn-primary h-14 text-sm",
+                    (!selectedDecision || isBusy) && "opacity-50 cursor-not-allowed"
+                  )}
+               >
+                 {isBusy ? <LoadingSpinner size="sm" /> : 'CONFIRM DECISION'}
+               </button>
+            </div>
+          </div>
+        </div>
       </div>
 
+      {/* Burn Confirmation Dialog */}
       {pendingDangerDecision === Outcome.Punished && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70">
-          <div className="w-full max-w-lg material-card p-6">
-            <div className="flex items-start justify-between gap-4 mb-3">
-              <div className="flex items-center gap-3">
-                <AlertTriangle className="text-[var(--md-sys-color-error)]" size={22} />
-                <h3 className="headline-medium text-[var(--md-sys-color-on-surface)]">本当に焼却しますか？</h3>
-              </div>
-              <button
-                type="button"
-                className="material-btn material-btn-tonal !px-3 !py-2"
-                onClick={() => setPendingDangerDecision(null)}
-                disabled={isBusy}
-              >
-                閉じる
-              </button>
-            </div>
-
-            <p className="text-[var(--md-sys-color-on-surface-variant)] mb-4">
-              供物は永久に失われます。誰も受け取れません。
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="card-pop bg-black border-[var(--color-pop-error)] p-8 max-w-md w-full shadow-[0_0_50px_rgba(255,51,51,0.2)]">
+            <h3 className="text-[var(--color-pop-error)] font-bold text-2xl mb-4 font-[family-name:var(--font-display)] uppercase flex items-center gap-2">
+              <AlertTriangle /> Confirm Burn
+            </h3>
+            <p className="text-[var(--color-pop-text-muted)] mb-6">
+              This action is <strong className="text-white">IRREVERSIBLE</strong>. The funds will be lost forever.
             </p>
+            
+            <input
+              autoFocus
+              className="w-full bg-black border border-[var(--color-pop-border)] p-4 text-center font-mono text-[var(--color-pop-error)] mb-6 focus:border-[var(--color-pop-error)] outline-none"
+              placeholder="Type 'BURN' to confirm"
+              value={burnConfirmText}
+              onChange={(e) => setBurnConfirmText(e.target.value)}
+            />
 
-            <div className="flex gap-3">
-              <button
-                type="button"
-                className="material-btn material-btn-tonal w-full justify-center"
-                onClick={() => setPendingDangerDecision(null)}
-                disabled={isBusy}
-              >
-                やめる
-              </button>
-              <button
-                type="button"
-                className="material-btn w-full justify-center border border-[var(--md-sys-color-error)] bg-[var(--md-sys-color-error)] text-black disabled:opacity-50"
-                onClick={async () => {
+            <div className="flex gap-4">
+              <button 
+                onClick={() => {
                   setPendingDangerDecision(null);
-                  await handleDecision(Outcome.Punished);
+                  setBurnConfirmText('');
                 }}
-                disabled={isBusy || !isConnected}
+                className="btn-secondary flex-1"
               >
-                {isBusy ? <LoadingSpinner size="sm" /> : '焼却する'}
+                CANCEL
+              </button>
+              <button 
+                onClick={() => handleDecision(Outcome.Punished)}
+                disabled={burnConfirmText.toUpperCase() !== 'BURN' || isBusy}
+                className="btn-primary flex-1 bg-[var(--color-pop-error)] border-[var(--color-pop-error)] hover:bg-[var(--color-pop-error)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                BURN IT
               </button>
             </div>
           </div>
@@ -399,4 +401,3 @@ export function ResolveClient({ rawId }: ResolveClientProps) {
     </main>
   );
 }
-

@@ -1,5 +1,4 @@
-// エラー表示用の共通コンポーネント
-
+// Serious Pop Error Display
 'use client';
 
 import { motion } from 'framer-motion';
@@ -20,14 +19,10 @@ export function ErrorDisplay({ error, className }: ErrorDisplayProps) {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`p-4 bg-[var(--md-sys-color-error-container)] rounded-lg flex items-center gap-3 text-[var(--md-sys-color-on-error-container)] font-medium ${className || ''}`}
+      className={`p-4 border border-[var(--color-pop-error)] bg-[var(--color-pop-error)]/10 flex items-center gap-3 text-[var(--color-pop-error)] font-bold font-mono text-sm uppercase tracking-wider ${className || ''}`}
     >
-      <AlertCircle size={24} />
+      <AlertCircle size={20} className="shrink-0" />
       <span>{message}</span>
     </motion.div>
   );
 }
-
-
-
-
