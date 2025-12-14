@@ -23,15 +23,68 @@
 # misc
 .DS_Store
 *.pem
+*.key
+*.crt
+*.cer
+*.der
+*.csr
+*.p12
+*.pfx
+*.jks
+*.keystore
 
 # debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
+.eslintcache
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+!.env.sample
+
+# local credential/config files (often contain tokens)
+# NOTE: .gitignore doesn't stop already-tracked files from being committed.
+.npmrc
+!.npmrc.example
+.yarnrc.yml
+!.yarnrc.yml.example
+.pnpmrc
+!.pnpmrc.example
+
+# common local auth files
+.netrc
+
+# cloud/provider credentials (never commit)
+.aws/
+.azure/
+.kube/
+.docker/config.json
+.docker/config.json.*
+
+# direnv
+.envrc
+.direnv/
+
+# local secrets vaults / encrypted blobs
+.secrets/
+secrets/
+*.age
+*.gpg
+*.kdbx
+
+# terraform state/vars (often contain secrets)
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.auto.tfvars
+*.auto.tfvars.json
+!*.tfvars.example
+!*.auto.tfvars.example
 
 # vercel
 .vercel
@@ -47,3 +100,9 @@ contracts/broadcast/
 
 # editor
 .vscode/
+.idea/
+*.swp
+*.swo
+
+# local assistant transcripts / backups
+.amplifier/
