@@ -11,6 +11,8 @@ import { ConfessStep } from './components/steps/ConfessStep';
 import { SacrificeStep } from './components/steps/SacrificeStep';
 import { ProcessingStep } from './components/steps/ProcessingStep';
 import { SuccessStep } from './components/steps/SuccessStep';
+import { ErrorDisplay } from './components/ErrorDisplay';
+import { REGRET_VAULT_ADDRESS } from './constants';
 
 export default function Home() {
   const {
@@ -28,6 +30,20 @@ export default function Home() {
     nextStep,
     prevStep,
   } = useConfessionFlow();
+
+  if (REGRET_VAULT_ADDRESS === ('0x0000000000000000000000000000000000000000' as const)) {
+    return (
+      <main className="relative min-h-screen w-full flex flex-col overflow-hidden">
+        <Header />
+        <div className="relative z-10 w-full flex-1 flex items-center justify-center p-4">
+          <ErrorDisplay
+            title="Contract not configured"
+            message="Deploy RegretVaultV2 and set NEXT_PUBLIC_REGRET_VAULT_V2_ADDRESS."
+          />
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="relative min-h-screen w-full flex flex-col overflow-hidden">

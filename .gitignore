@@ -111,3 +111,6 @@ contracts/broadcast/
 # local tmp dirs
 .tmp/
 @.tmp/
+
+docs/
+docs/**

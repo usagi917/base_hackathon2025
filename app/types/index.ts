@@ -17,10 +17,13 @@ export enum Outcome {
 
 export interface Apology {
   sender: `0x${string}`;
-  amount: bigint;
+  amountDeposited: bigint;
   message: string;
   outcome: Outcome;
-  timestamp: bigint;
+  depositedAt: bigint;
+  resolver: `0x${string}`;
+  resolvedAt: bigint;
+  settled: boolean;
 }
 
 export interface WriteError {
@@ -28,4 +31,3 @@ export interface WriteError {
   message: string;
   name?: string;
 }
-

@@ -141,7 +141,7 @@ struct Apology {
   - `Content-Type: application/json`
   - 戻り値：ERC-721 metadata JSON
 
-- `GET /api/image/[tokenId].png`
+- `GET /api/image/[tokenId]`
   - `Content-Type: image/png`
   - キャッシュ：`Cache-Control: public, max-age=31536000, immutable`
 
@@ -150,7 +150,7 @@ struct Apology {
 - `name`：`Proof of Regret — Judgment #<tokenId>`
 - `description`：固定の短文（**メッセージやアドレス、属性は含めない**）
   - 例：`A non-transferable Judgment SBT minted when the judge resolves a Proof of Regret.`
-- `image`：`/api/image/<tokenId>.png`
+- `image`：`/api/image/<tokenId>`
 - `attributes`：原則 **省略**（ウォレット/マーケットが表示する可能性があるため）
 
 #### メッセージの表示方針（確定）
@@ -216,7 +216,7 @@ struct Apology {
 
 Tx成功後（receipt確認後）、画面上に「SBTカードのプレビュー」を表示する。
 
-- 画像：`/api/image/<regretId>.png` をそのまま表示する
+- 画像：`/api/image/<regretId>` をそのまま表示する
 - テキスト：`Proof of Regret — Judgment #<regretId>` を表示する
 
 備考：

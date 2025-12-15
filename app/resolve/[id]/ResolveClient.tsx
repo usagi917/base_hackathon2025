@@ -1,21 +1,21 @@
 'use client';
 
-import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import { formatEther } from 'viem';
 import clsx from 'clsx';
-import { AnimatePresence, motion } from 'framer-motion';
 import { AlertTriangle, CheckCircle2, CircleX, Handshake, Skull, Wallet as WalletIcon } from 'lucide-react';
 import { ConnectWallet, Wallet } from '@coinbase/onchainkit/wallet';
 
 import { REGRET_VAULT_ABI, REGRET_VAULT_ADDRESS } from '../../constants';
-import { type Apology, Outcome } from '../../types';
+import { type Apology, Outcome, type WriteError } from '../../types';
 import { ErrorDisplay } from '../../components/ErrorDisplay';
 import { Header } from '../../components/Header';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { useBaseChainGate } from '../../hooks/useBaseChainGate';
+import { getErrorMessage } from '../../utils/error';
 
 interface ResolveClientProps {
   rawId: string;
@@ -124,11 +124,12 @@ export function ResolveClient({ rawId }: ResolveClientProps) {
     }
   }, [normalizedId]);
 
-  const { isConnected, address } = useAccount();
-  const { ensureBaseChain, isSwitchingChain, isOnBase } = useBaseChainGate();
+  const { isConnected } = useAccount();
+  const { ensureBaseChain, isSwitchingChain, isOnBase, switchError } = useBaseChainGate();
   const [selectedDecision, setSelectedDecision] = useState<Outcome | null>(null);
   const [pendingDangerDecision, setPendingDangerDecision] = useState<Outcome | null>(null);
   const [burnConfirmText, setBurnConfirmText] = useState('');
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const hasMounted = useSyncExternalStore(
     () => () => {},
@@ -136,7 +137,6 @@ export function ResolveClient({ rawId }: ResolveClientProps) {
     () => false
   );
   const isWalletConnected = hasMounted ? isConnected : false;
-  const walletAddress = hasMounted ? address : undefined;
 
   const { data: apology, isLoading: isReading, refetch: refetchApology } = useReadContract({
     address: REGRET_VAULT_ADDRESS,
@@ -153,10 +153,19 @@ export function ResolveClient({ rawId }: ResolveClientProps) {
   const outcomeInt = useMemo(() => Number(apologyData?.outcome ?? Outcome.Pending), [apologyData]);
   const existsOnChain = useMemo(() => {
     if (!apologyData) return false;
-    return apologyData.timestamp !== BigInt(0);
+    return apologyData.depositedAt !== BigInt(0);
   }, [apologyData]);
 
   const isBusy = isPending || isConfirming || isSwitchingChain;
+  const confirmDisabled = !selectedDecision || isBusy || !isWalletConnected;
+
+  const confirmBlockedMessage = useMemo(() => {
+    if (!isWalletConnected) return 'Connect wallet to judge.';
+    if (!isOnBase) return 'Switch to Base Sepolia first.';
+    if (!selectedDecision) return 'Select a decision above.';
+    if (isBusy) return 'Please wait…';
+    return null;
+  }, [isBusy, isOnBase, isWalletConnected, selectedDecision]);
 
   useEffect(() => {
     if (isTransactionSuccess) {
@@ -165,21 +174,44 @@ export function ResolveClient({ rawId }: ResolveClientProps) {
   }, [isTransactionSuccess, refetchApology]);
 
   const handleDecision = async (decision: Outcome) => {
-    if (!apologyId) return;
+    setActionError(null);
+    if (apologyId === null) return;
     const send = () =>
-      writeContract({
-        address: REGRET_VAULT_ADDRESS,
-        abi: REGRET_VAULT_ABI,
-        functionName: 'resolve',
-        args: [apologyId, decision],
-      });
-    await ensureBaseChain(send);
+      (() => {
+        try {
+          writeContract({
+            address: REGRET_VAULT_ADDRESS,
+            abi: REGRET_VAULT_ABI,
+            functionName: 'resolve',
+            args: [apologyId, decision],
+          });
+        } catch (error) {
+          setActionError(getErrorMessage(error));
+        }
+      })();
+
+    const ok = await ensureBaseChain(send);
+    if (!ok && !switchError) setActionError('Network switch was cancelled.');
   };
 
   if (isReading || needsNormalization) {
     return (
       <main className="min-h-screen bg-black flex items-center justify-center">
         <LoadingSpinner size="lg" />
+      </main>
+    );
+  }
+
+  if (REGRET_VAULT_ADDRESS === ('0x0000000000000000000000000000000000000000' as const)) {
+    return (
+      <main className="min-h-screen bg-black flex flex-col">
+        <Header />
+        <div className="flex-1 flex items-center justify-center p-4">
+          <ErrorDisplay
+            title="Contract not configured"
+            message="Set NEXT_PUBLIC_REGRET_VAULT_V2_ADDRESS after deploying RegretVaultV2."
+          />
+        </div>
       </main>
     );
   }
@@ -195,6 +227,7 @@ export function ResolveClient({ rawId }: ResolveClientProps) {
 
   // ALREADY RESOLVED
   if (outcomeInt !== Outcome.Pending) {
+    const tokenId = apologyId?.toString() ?? decodedCandidateId;
     return (
       <main className="min-h-screen bg-black flex flex-col">
         <Header />
@@ -209,6 +242,24 @@ export function ResolveClient({ rawId }: ResolveClientProps) {
             <p className="text-[var(--color-pop-text-muted)] mb-8">
               This proof has already been judged.
             </p>
+
+            <div className="border border-[var(--color-pop-border)] bg-[var(--color-pop-surface)]/30 p-4 mb-8">
+              <div className="text-xs font-mono text-[var(--color-pop-text-muted)] uppercase tracking-wider mb-3">
+                Judgment SBT Preview
+              </div>
+              <div className="mx-auto w-full max-w-[420px] aspect-square border border-[var(--color-pop-border)] bg-black overflow-hidden">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`/api/image/${tokenId}`}
+                  alt={`Judgment SBT #${tokenId}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="mt-3 text-sm font-bold text-white">
+                Proof of Regret — Judgment #{tokenId}
+              </div>
+            </div>
+
             <Link href="/" className="btn-primary inline-flex">
               CREATE NEW PROOF
             </Link>
@@ -233,7 +284,7 @@ export function ResolveClient({ rawId }: ResolveClientProps) {
               <div>
                 <span className="text-[var(--color-pop-text-muted)] text-sm font-mono uppercase tracking-wider block mb-2">Offering</span>
                 <div className="text-6xl md:text-8xl font-black font-[family-name:var(--font-display)] text-white leading-none">
-                  {formatEther(apologyData.amount)} <span className="text-2xl text-[var(--color-pop-text-muted)]">ETH</span>
+                  {formatEther(apologyData.amountDeposited)} <span className="text-2xl text-[var(--color-pop-text-muted)]">ETH</span>
                 </div>
               </div>
               <div className="text-right">
@@ -278,7 +329,7 @@ export function ResolveClient({ rawId }: ResolveClientProps) {
               <div className="flex-1 flex flex-col items-center justify-center border border-[var(--color-pop-error)] bg-[var(--color-pop-error)]/10 p-6 text-center">
                 <AlertTriangle size={48} className="text-[var(--color-pop-error)] mb-4" />
                 <p className="mb-6 font-bold text-[var(--color-pop-error)]">Switch to Base Sepolia</p>
-                <button onClick={() => ensureBaseChain()} className="btn-secondary w-full">SWITCH NETWORK</button>
+                <button type="button" onClick={() => ensureBaseChain()} className="btn-secondary w-full">SWITCH NETWORK</button>
               </div>
             ) : (
               // DECISION CARDS
@@ -289,7 +340,11 @@ export function ResolveClient({ rawId }: ResolveClientProps) {
                   return (
                     <button
                       key={option.outcome}
-                      onClick={() => setSelectedDecision(option.outcome)}
+                      type="button"
+                      onClick={() => {
+                        setActionError(null);
+                        setSelectedDecision(option.outcome);
+                      }}
                       disabled={isBusy}
                       className={clsx(
                         "group relative flex items-center gap-4 p-5 w-full text-left transition-all duration-200 border",
@@ -337,22 +392,65 @@ export function ResolveClient({ rawId }: ResolveClientProps) {
                </div>
 
                <button
-                  onClick={async () => {
-                    if (!selectedDecision) return;
-                    if (selectedDecision === Outcome.Punished) {
-                      setPendingDangerDecision(Outcome.Punished);
-                      return;
-                    }
-                    await handleDecision(selectedDecision);
-                  }}
-                  disabled={!selectedDecision || isBusy || !isWalletConnected}
-                  className={clsx(
-                    "w-full btn-primary h-14 text-sm",
-                    (!selectedDecision || isBusy) && "opacity-50 cursor-not-allowed"
-                  )}
+                 type="button"
+                 aria-disabled={confirmDisabled}
+                 onClick={async () => {
+                   if (confirmDisabled) {
+                     if (confirmBlockedMessage) setActionError(confirmBlockedMessage);
+                     if (isWalletConnected && !isOnBase) void ensureBaseChain();
+                     return;
+                   }
+
+                   setActionError(null);
+                   if (!selectedDecision) return;
+                   if (selectedDecision === Outcome.Punished) {
+                     setPendingDangerDecision(Outcome.Punished);
+                     return;
+                   }
+                   await handleDecision(selectedDecision);
+                 }}
+                 className={clsx(
+                   "w-full btn-primary h-14 text-sm",
+                   confirmDisabled && "opacity-50 cursor-not-allowed"
+                 )}
                >
                  {isBusy ? <LoadingSpinner size="sm" /> : 'CONFIRM DECISION'}
                </button>
+
+               {!isBusy && (
+                 <div className="mt-3 text-xs font-mono text-[var(--color-pop-text-muted)]">
+                   {!isWalletConnected
+                     ? 'Connect wallet to judge.'
+                     : !selectedDecision
+                       ? 'Select a decision above.'
+                       : !isOnBase
+                         ? 'You are not on Base Sepolia. Clicking will prompt a network switch.'
+                         : null}
+                 </div>
+               )}
+
+               {(actionError || switchError || writeError) && (
+                 <div className="mt-4 space-y-3">
+                   {actionError && (
+                     <ErrorDisplay
+                       title="Can’t proceed"
+                       message={actionError}
+                     />
+                   )}
+                   {switchError && (
+                     <ErrorDisplay
+                       title="Network switch failed"
+                       message={switchError.message}
+                     />
+                   )}
+                   {writeError && (
+                     <ErrorDisplay
+                       title="Transaction failed"
+                       message={(writeError as WriteError).shortMessage ?? writeError.message}
+                     />
+                   )}
+                 </div>
+               )}
             </div>
           </div>
         </div>
@@ -379,6 +477,7 @@ export function ResolveClient({ rawId }: ResolveClientProps) {
 
             <div className="flex gap-4">
               <button 
+                type="button"
                 onClick={() => {
                   setPendingDangerDecision(null);
                   setBurnConfirmText('');
@@ -388,6 +487,7 @@ export function ResolveClient({ rawId }: ResolveClientProps) {
                 CANCEL
               </button>
               <button 
+                type="button"
                 onClick={() => handleDecision(Outcome.Punished)}
                 disabled={burnConfirmText.toUpperCase() !== 'BURN' || isBusy}
                 className="btn-primary flex-1 bg-[var(--color-pop-error)] border-[var(--color-pop-error)] hover:bg-[var(--color-pop-error)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"

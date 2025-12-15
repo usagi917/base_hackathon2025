@@ -12,7 +12,7 @@ interface ConfessStepProps {
 }
 
 export function ConfessStep({ message, onMessageChange, onNext, onPrev }: ConfessStepProps) {
-  const isValid = message.trim().length > 0;
+  const isValid = message.trim().length > 0 && message.length <= 300;
 
   return (
     <motion.div
@@ -30,13 +30,14 @@ export function ConfessStep({ message, onMessageChange, onNext, onPrev }: Confes
           placeholder="TYPE YOUR REGRET HERE..."
           value={message}
           onChange={(e) => onMessageChange(e.target.value)}
+          maxLength={300}
           spellCheck={false}
         />
 
         {/* Status Bar / Actions */}
         <div className="p-4 border-t border-[var(--color-pop-border)] bg-[var(--color-pop-surface)] flex justify-between items-center">
           <div className="hidden sm:flex gap-4 text-xs font-mono text-[var(--color-pop-text-muted)]">
-            <span>CHARS: {message.length}</span>
+            <span>CHARS: {message.length}/300</span>
             <span>STATUS: {isValid ? 'READY' : 'WAITING'}</span>
           </div>
 
