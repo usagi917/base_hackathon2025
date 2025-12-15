@@ -26,7 +26,13 @@ export function Providers({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         // アプリの準備が完了したことをBase Mini Appに通知
-        sdk.actions.ready();
+        try {
+            console.log('[Mini App] Calling sdk.actions.ready()...');
+            sdk.actions.ready();
+            console.log('[Mini App] sdk.actions.ready() called successfully');
+        } catch (error) {
+            console.error('[Mini App] Error calling sdk.actions.ready():', error);
+        }
     }, []);
 
     return (
