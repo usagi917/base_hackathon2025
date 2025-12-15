@@ -8,15 +8,19 @@
 
 ### 仕組み
 
-1.  **Confess (告白):** ユーザー（加害者）は後悔のメッセージを書き込み、任意の額の ETH をデポジット（供託）します。
+1.  **Confess (告白):** ユーザー（謝りたい人）は後悔のメッセージを書き込み、任意の額の ETH をデポジット（供託）します。
 2.  **Sacrifice (犠牲):** スマートコントラクトに ETH がロックされ、解決用の共有リンクが発行されます。
-3.  **Judgment (審判):** リンクを受け取った相手（被害者）は、以下の3つから運命を選択します。
+3.  **Judgment (審判):** リンクを受け取った相手（謝罪を受ける人）は、以下の3つから運命を選択します。
 
 | 選択 | 結果 | 意味 |
 | :--- | :--- | :--- |
-| **Forgive (赦す)** | ロックされた ETH は**被害者（相手）**が受け取ります。 | 賠償として受け取る。 |
-| **Reject (拒絶)** | 謝罪を受け入れず、ETH は**加害者（あなた）**に返金されます。 | 「金で解決しようとするな」という拒絶。 |
+| **Forgive (赦す)** | ロックされた ETH は**謝罪を受ける人（相手）**が受け取ります。 | 賠償として受け取る。 |
+| **Reject (拒絶)** | 謝罪を受け入れず、ETH は**謝りたい人（あなた）**に返金されます。 | 「金で解決しようとするな」という拒絶。 |
 | **Punish (処罰)** | ETH は永久にアクセス不可能なアドレスへ送られ、**焼却（Burn）**されます。 | 誰も得をしない、純粋な罰。 |
+
+![Sequence Diagram](public/diagrams/sequence.svg)
+
+
 
 ## 技術スタック
 
@@ -25,6 +29,9 @@
 -   **UI/Animation:** [Tailwind CSS](https://tailwindcss.com/), [Framer Motion](https://www.framer.com/motion/)
 -   **Smart Contract:** Solidity, [Foundry](https://getfoundry.sh/)
 -   **Network:** Base Sepolia (Testnet)
+
+![Architecture Diagram](public/diagrams/architecture.svg)
+
 
 ## すぐに始める
 
