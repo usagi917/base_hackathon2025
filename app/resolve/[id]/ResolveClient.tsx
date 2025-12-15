@@ -7,7 +7,7 @@ import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteCont
 import { formatEther } from 'viem';
 import clsx from 'clsx';
 import { AnimatePresence, motion } from 'framer-motion';
-import { AlertTriangle, Check, CheckCircle2, Lock, Shield, Skull, Sword, Wallet as WalletIcon, ArrowLeft } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, CircleX, Handshake, Skull, Wallet as WalletIcon } from 'lucide-react';
 import { ConnectWallet, Wallet } from '@coinbase/onchainkit/wallet';
 
 import { REGRET_VAULT_ABI, REGRET_VAULT_ADDRESS } from '../../constants';
@@ -30,38 +30,38 @@ function shortenAddress(address?: string, head = 6, tail = 4) {
 function outcomeLabel(outcome: Outcome) {
   switch (outcome) {
     case Outcome.Forgiven:
-      return 'FORGIVEN';
+      return '和解';
     case Outcome.Rejected:
-      return 'REJECTED';
+      return '断罪';
     case Outcome.Punished:
-      return 'PUNISHED';
+      return '憤怒';
     default:
-      return 'PENDING';
+      return '未決';
   }
 }
 
 const DECISION_OPTIONS = [
   {
     outcome: Outcome.Forgiven,
-    title: 'FORGIVE',
-    subtitle: 'ACCEPT OFFERING',
-    description: 'The offering (ETH) is sent to you (the judge).',
-    icon: Shield,
+    title: '和解',
+    subtitle: '供物を受け入れる',
+    description: '供物（ETH）があなた（審判者）に送られます。',
+    icon: Handshake,
     color: 'var(--color-pop-primary)',
   },
   {
     outcome: Outcome.Rejected,
-    title: 'REJECT',
-    subtitle: 'RETURN TO SENDER',
-    description: 'The offering is returned to the sender. You get nothing.',
-    icon: Sword,
+    title: '断罪',
+    subtitle: '送り主へ返却',
+    description: '供物を送り主に差し戻します。あなたの報酬はありません。',
+    icon: CircleX,
     color: '#ffffff',
   },
   {
     outcome: Outcome.Punished,
-    title: 'PUNISH',
-    subtitle: 'BURN FOREVER',
-    description: 'The offering is burned. No one gets it.',
+    title: '憤怒',
+    subtitle: '永遠に焼却',
+    description: '供物を焼却します。誰の手にも渡りません。',
     icon: Skull,
     color: 'var(--color-pop-error)',
   },

@@ -106,3 +106,8 @@ contracts/broadcast/
 
 # local assistant transcripts / backups
 .amplifier/
+.temp/amplifier/
+
+# local tmp dirs
+.tmp/
+@.tmp/
