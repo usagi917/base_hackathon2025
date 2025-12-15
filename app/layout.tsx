@@ -31,6 +31,22 @@ export const metadata: Metadata = {
     title: "Proof of Regret",
     description: "Words are cheap. Proof is on-chain.",
   },
+  other: {
+    'fc:miniapp': JSON.stringify({
+      version: 'next',
+      imageUrl: `${metadataBase}/embed.png`,
+      button: {
+        title: 'Burn ETH & Prove Regret',
+        action: {
+          type: 'launch_miniapp',
+          name: 'Proof of Regret',
+          url: metadataBase?.toString() || '',
+          splashImageUrl: `${metadataBase}/splash.png`,
+          splashBackgroundColor: '#000000',
+        },
+      },
+    }),
+  },
 };
 
 export default function RootLayout({
