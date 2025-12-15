@@ -35,14 +35,14 @@ export const metadata: Metadata = {
     'base:app_id': '693ff955d77c069a945bdf04',
     'fc:miniapp': JSON.stringify({
       version: 'next',
-      imageUrl: `${metadataBase}/embed.png`,
+      imageUrl: new URL('/embed.png', metadataBase).toString(),
       button: {
         title: 'Burn ETH & Prove Regret',
         action: {
           type: 'launch_miniapp',
           name: 'Proof of Regret',
-          url: metadataBase?.toString() || '',
-          splashImageUrl: `${metadataBase}/splash.png`,
+          url: metadataBase.toString(),
+          splashImageUrl: new URL('/splash.png', metadataBase).toString(),
           splashBackgroundColor: '#000000',
         },
       },
