@@ -25,7 +25,7 @@ export async function GET() {
             splashImageUrl: `${URL}/splash.png`,
             splashBackgroundColor: "#000000",
             webhookUrl: undefined, // オプション
-            subtitle: "Words are cheap. Proof is on-chain.",
+            subtitle: "Burn ETH, Prove Commitment",
             description: "後悔の証明をブロックチェーン上に刻み、ETHを燃やすことでコミットメントを示すアプリ",
             screenshotUrls: [
                 // 後で追加
