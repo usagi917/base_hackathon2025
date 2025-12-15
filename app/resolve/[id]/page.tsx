@@ -56,13 +56,13 @@ function buildResolveMetadata(id: string): Metadata {
   };
 }
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const resolvedParams = await Promise.resolve(params);
   const rawId = await resolveRawId(resolvedParams);
   return buildResolveMetadata(normalizeResolveId(rawId) ?? rawId);
 }
 
-export default async function ResolvePage({ params }: { params: { id: string } }) {
+export default async function ResolvePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await Promise.resolve(params);
   const rawId = await resolveRawId(resolvedParams);
   return <ResolveClient rawId={rawId} />;

@@ -256,7 +256,7 @@ export function ResolveClient({ rawId }: ResolveClientProps) {
                 />
               </div>
               <div className="mt-3 text-sm font-bold text-white">
-                Proof of Regret — Judgment #{tokenId}
+                Proof of Regret — Judgment #{tokenId} — {outcomeLabel(outcomeInt as Outcome)}
               </div>
             </div>
 

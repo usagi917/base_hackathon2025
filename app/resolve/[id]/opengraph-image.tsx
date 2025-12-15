@@ -7,8 +7,9 @@ export const size = {
 
 export const contentType = 'image/png';
 
-export default function OpenGraphImage({ params }: { params: { id: string } }) {
-  const rawId = params.id ?? '';
+export default async function OpenGraphImage({ params }: { params: Promise<{ id: string }> }) {
+  const rawParams = await Promise.resolve(params);
+  const rawId = rawParams.id ?? '';
   const decodedId = (() => {
     try {
       return decodeURIComponent(rawId);

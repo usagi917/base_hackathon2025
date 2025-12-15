@@ -7,7 +7,7 @@ import { createPublicClient, http } from 'viem';
 import { baseSepolia } from 'viem/chains';
 
 import { REGRET_VAULT_ABI, REGRET_VAULT_ADDRESS } from '../../../constants';
-import type { Apology } from '../../../types';
+import { Outcome, type Apology } from '../../../types';
 
 export const runtime = 'nodejs';
 
@@ -65,9 +65,32 @@ function formatEth4(wei: bigint) {
   return `${whole.toString()}.${frac.toString().padStart(4, '0')} ETH`;
 }
 
+function outcomeTheme(outcome: number) {
+  switch (outcome) {
+    case Outcome.Forgiven:
+      return { label: 'FORGIVEN', backgroundColor: '#CCFF00', color: '#0B0F14', borderColor: '#CCFF00' };
+    case Outcome.Rejected:
+      return {
+        label: 'REJECTED',
+        backgroundColor: 'rgba(230,234,242,0.08)',
+        color: '#E6EAF2',
+        borderColor: 'rgba(230,234,242,0.25)',
+      };
+    case Outcome.Punished:
+      return { label: 'PUNISHED', backgroundColor: '#FF3333', color: '#0B0F14', borderColor: '#FF3333' };
+    default:
+      return {
+        label: 'PENDING',
+        backgroundColor: 'rgba(230,234,242,0.08)',
+        color: '#E6EAF2',
+        borderColor: 'rgba(230,234,242,0.25)',
+      };
+  }
+}
+
 export async function GET(
   req: NextRequest,
-  { params }: { params: { tokenId: string } | Promise<{ tokenId: string }> }
+  { params }: { params: Promise<{ tokenId: string }> }
 ) {
   const { tokenId: rawTokenId } = await params;
   const tokenId = tokenIdFromParam(rawTokenId);
@@ -90,6 +113,9 @@ export async function GET(
   }) as unknown as Apology;
 
   const fontData = await readFile(NOTO_SANS_TTF);
+
+  const outcomeInt = Number(apology.outcome ?? Outcome.Pending);
+  const { label: outcomeLabel, backgroundColor, color, borderColor } = outcomeTheme(outcomeInt);
 
   const amountWei = apology.amountDeposited;
   const resolvedAt = apology.resolvedAt;
@@ -125,6 +151,39 @@ export async function GET(
             fontFamily: 'Noto Sans',
           }}
         >
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              width: '100%',
+            }}
+          >
+            <div
+              style={{
+                fontSize: '18px',
+                fontWeight: 700,
+                letterSpacing: '0.24em',
+                color: 'rgba(230,234,242,0.6)',
+              }}
+            >
+              JUDGMENT
+            </div>
+            <div
+              style={{
+                fontSize: '24px',
+                fontWeight: 700,
+                letterSpacing: '0.08em',
+                padding: '10px 16px',
+                borderRadius: '9999px',
+                border: `1px solid ${borderColor}`,
+                backgroundColor,
+                color,
+              }}
+            >
+              {outcomeLabel}
+            </div>
+          </div>
           <div
             style={{
               fontSize: '88px',
