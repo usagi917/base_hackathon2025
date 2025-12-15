@@ -35,14 +35,14 @@ export const metadata: Metadata = {
     'base:app_id': '693ff955d77c069a945bdf04',
     'fc:miniapp': JSON.stringify({
       version: 'next',
-      imageUrl: new URL('/embed.png', metadataBase).toString(),
+      imageUrl: new URL('/miniapp-embed.png', metadataBase).toString(),
       button: {
         title: 'Burn ETH & Prove Regret',
         action: {
-          type: 'launch_miniapp',
+          type: 'launch_frame',
           name: 'Proof of Regret',
           url: metadataBase.toString(),
-          splashImageUrl: new URL('/splash.png', metadataBase).toString(),
+          splashImageUrl: new URL('/miniapp-splash.png', metadataBase).toString(),
           splashBackgroundColor: '#000000',
         },
       },
@@ -55,12 +55,14 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const rpcUrl = process.env.BASE_SEPOLIA_RPC_URL;
+
   return (
     <html lang="ja">
       <body className="bg-[var(--md-sys-color-background)] text-[var(--md-sys-color-on-background)] antialiased font-sans overflow-x-hidden">
         <ArtBackground />
         <div className="relative z-10">
-          <Providers>{children}</Providers>
+          <Providers rpcUrl={rpcUrl}>{children}</Providers>
         </div>
       </body>
     </html>

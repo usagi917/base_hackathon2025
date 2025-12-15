@@ -8,13 +8,19 @@ import { WagmiProvider, createConfig, http } from 'wagmi';
 import { coinbaseWallet, injected } from 'wagmi/connectors';
 import { sdk } from '@farcaster/miniapp-sdk';
 
-export function Providers({ children }: { children: ReactNode }) {
+export function Providers({
+    children,
+    rpcUrl,
+}: {
+    children: ReactNode;
+    rpcUrl?: string;
+}) {
     const [queryClient] = useState(() => new QueryClient());
 
     const [wagmiConfig] = useState(() => createConfig({
         chains: [baseSepolia],
         transports: {
-            [baseSepolia.id]: http(),
+            [baseSepolia.id]: rpcUrl ? http(rpcUrl) : http(),
         },
         connectors: [
             injected(),
@@ -44,6 +50,7 @@ export function Providers({ children }: { children: ReactNode }) {
             <QueryClientProvider client={queryClient}>
                 <OnchainKitProvider
                     chain={baseSepolia}
+                    rpcUrl={rpcUrl}
                 >
                     {children}
                 </OnchainKitProvider>
