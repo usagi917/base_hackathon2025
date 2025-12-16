@@ -10,7 +10,7 @@
 
 - **アプリURL**: https://base-app-swart.vercel.app/
 - **スライド**: https://x.gd/n2NxH
-- **デモ動画**(任意): https://example.com (YouTube/Loom等)
+
 
 ## 推しポイント
 
@@ -22,13 +22,14 @@
    -  「許し」の瞬間が、不変の歴史になる。
   言葉や記憶は時間とともに薄れますが、このチェーン上のトランザクションは色褪せません。二人が危機を乗り越え、和解を選択したその瞬間は、改ざん不可能な「真実」として、ネットワークが存続する限り永遠に残り続けます。
 
-## 使用技術(もしこだわりがあれば)
+## 使用技術
 
 - **フロントエンド**:Next.js 16, TypeScript, Tailwind CSS, Framer Motion
 - **バックエンド**:Solidity, Next.js Serverless Functions 
 - **データベース**:Base Sepolia
 - **インフラ**:Vercel, Base testNet 
-- **その他**:Wagmi / Viem / OnchainKit 
+- **その他**:Wagmi / Viem / OnchainKit
+
 
 ## チームメンバー
 

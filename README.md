@@ -58,11 +58,15 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
 `BASE_SEPOLIA_RPC_URL` を省略するとパブリック RPC が使われますが、レートリミット回避のため設定を推奨します。
 
+### デモ
+
+-   本番: https://base-app-swart.vercel.app/
+
 ### インストール
 
 ```bash
-git clone https://github.com/your-username/proof-of-regret.git
-cd proof-of-regret
+git clone https://github.com/usagi917/base_hackathon2025.git
+cd base_hackathon2025
 npm install
 ```
 
@@ -79,7 +83,6 @@ npm run dev
 
 -   **RegretVaultV2 (メインで使用)**: Base Sepolia（Chain ID 84532）。デプロイ後、`.env` の `NEXT_PUBLIC_REGRET_VAULT_V2_ADDRESS` に設定してください。
 -   **RegretJudgmentSBT**: 上記と同時にデプロイし、`.env` の `NEXT_PUBLIC_JUDGMENT_SBT_ADDRESS` に設定してください。
--   **Legacy RegretVault (参考)**: Base Sepolia `0xd0d4044c7e51e96002dd143bbc441cd6b1eafdaa`（スクリプトの初回デプロイ結果）。[BaseScan](https://sepolia.basescan.org/address/0xd0d4044c7e51e96002dd143bbc441cd6b1eafdaa)
 
 ### コントラクトのテスト・開発
 
