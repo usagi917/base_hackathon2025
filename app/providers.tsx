@@ -4,7 +4,7 @@ import { ReactNode, useState, useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { baseSepolia } from 'wagmi/chains';
 import { WagmiProvider, createConfig, http } from 'wagmi';
-import { coinbaseWallet, injected } from 'wagmi/connectors';
+import { coinbaseWallet, metaMask } from 'wagmi/connectors';
 import { sdk } from '@farcaster/miniapp-sdk';
 
 export function Providers({
@@ -22,7 +22,7 @@ export function Providers({
             [baseSepolia.id]: rpcUrl ? http(rpcUrl) : http(),
         },
         connectors: [
-            injected(),
+            metaMask(),
             coinbaseWallet({
                 appName: 'Proof of Regret',
             }),

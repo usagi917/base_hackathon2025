@@ -11,11 +11,6 @@ export function Header() {
   const { connect, connectors, isPending } = useConnect();
   const { disconnect } = useDisconnect();
 
-  const primaryConnector =
-    connectors.find((c) => c.id === 'coinbaseWalletSDK') ||
-    connectors.find((c) => c.id === 'injected') ||
-    connectors[0];
-
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-[var(--color-pop-border)] bg-[var(--color-pop-bg)]/80 backdrop-blur-md">
       <div className="por-container h-16 flex items-center justify-between">
@@ -53,9 +48,10 @@ export function Header() {
             <SimpleWalletDropdown
               isConnected={isConnected}
               address={address}
-              onConnect={() => primaryConnector && connect({ connector: primaryConnector })}
+              connectors={connectors}
+              onConnect={(connector) => connect({ connector })}
               onDisconnect={() => disconnect()}
-              isConnecting={isPending || !primaryConnector}
+              isConnecting={isPending || connectors.length === 0}
             />
           </div>
         </motion.div>
