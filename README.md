@@ -1,10 +1,10 @@
 # Proof of Regret 🙇‍♂️💸
 
-ブロックチェーンに「後悔」を刻み、その運命を相手に委ねる実験的アプリケーション。
+ブロックチェーンに「後悔」を刻み、その運命を相手に委ねるDApps。
 
 ## 概要
 
-**Proof of Regret** は、謝罪の意志として ETH をロックし、その処理権限を相手に譲渡する DApp (Decentralized Application) です。言葉だけの謝罪ではなく、金銭的な価値（Stake）を犠牲にする覚悟を示すことで、真剣さを証明します。
+**Proof of Regret** は、謝罪の意志として ETH をロックし、その処理権限を相手に譲渡するDAppです。言葉だけの謝罪ではなく、金銭的な価値を犠牲にする覚悟を示すことで、真剣さを証明します。
 
 ### 仕組み
 
@@ -18,6 +18,8 @@
 | **Reject (拒絶)** | 謝罪を受け入れず、ETH は**謝りたい人（あなた）**に返金されます。 | 「金で解決しようとするな」という拒絶。 |
 | **Punish (処罰)** | ETH は永久にアクセス不可能なアドレスへ送られ、**焼却（Burn）**されます。 | 誰も得をしない、純粋な罰。 |
 
+審判を実行した相手には、結果を示すJudgment SBT が自動ミントされます。
+
 ![Sequence Diagram](public/diagrams/sequence.svg)
 
 
@@ -25,10 +27,11 @@
 ## 技術スタック
 
 -   **Frontend:** [Next.js 16 (App Router)](https://nextjs.org/)
--   **Blockchain Interaction:** [Wagmi](https://wagmi.sh/), [Viem](https://viem.sh/), [Coinbase OnchainKit](https://onchainkit.xyz/)
+-   **Blockchain Interaction:** [Wagmi](https://wagmi.sh/), [Viem](https://viem.sh/)
+-   **State/Data:** [TanStack Query 5](https://tanstack.com/query/latest)
 -   **UI/Animation:** [Tailwind CSS](https://tailwindcss.com/), [Framer Motion](https://www.framer.com/motion/)
--   **Smart Contract:** Solidity, [Foundry](https://getfoundry.sh/)
--   **Network:** Base Sepolia (Testnet)
+-   **Smart Contract:** Solidity
+-   **Network:** Base Sepolia (Testnet / Chain ID 84532)
 
 ![Architecture Diagram](public/diagrams/architecture.svg)
 
@@ -40,6 +43,20 @@
 -   Node.js v20 以上
 -   npm または pnpm/yarn
 -   Foundry (コントラクト開発を行う場合)
+
+### 環境変数の設定
+
+フロントエンドは RegretVaultV2 / RegretJudgmentSBT のアドレスを環境変数から参照します。`.env.local` などに以下を設定してください。
+
+```bash
+BASE_SEPOLIA_RPC_URL=https://base-sepolia.example
+NEXT_PUBLIC_REGRET_VAULT_V2_ADDRESS=0x... # RegretVaultV2 のデプロイ先
+NEXT_PUBLIC_JUDGMENT_SBT_ADDRESS=0x...    # RegretJudgmentSBT のデプロイ先
+# optional
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+```
+
+`BASE_SEPOLIA_RPC_URL` を省略するとパブリック RPC が使われますが、レートリミット回避のため設定を推奨します。
 
 ### インストール
 
@@ -60,9 +77,9 @@ npm run dev
 
 コントラクトのソースコードは `contracts/` ディレクトリにあります。
 
--   **Contract Name:** `RegretVault`
--   **Deployed Address (Base Sepolia):** `0xd0d4044c7e51e96002dd143bbc441cd6b1eafdaa`
--   **Explorer:** [BaseScan (Sepolia)](https://sepolia.basescan.org/address/0xd0d4044c7e51e96002dd143bbc441cd6b1eafdaa)
+-   **RegretVaultV2 (メインで使用)**: Base Sepolia（Chain ID 84532）。デプロイ後、`.env` の `NEXT_PUBLIC_REGRET_VAULT_V2_ADDRESS` に設定してください。
+-   **RegretJudgmentSBT**: 上記と同時にデプロイし、`.env` の `NEXT_PUBLIC_JUDGMENT_SBT_ADDRESS` に設定してください。
+-   **Legacy RegretVault (参考)**: Base Sepolia `0xd0d4044c7e51e96002dd143bbc441cd6b1eafdaa`（スクリプトの初回デプロイ結果）。[BaseScan](https://sepolia.basescan.org/address/0xd0d4044c7e51e96002dd143bbc441cd6b1eafdaa)
 
 ### コントラクトのテスト・開発
 
