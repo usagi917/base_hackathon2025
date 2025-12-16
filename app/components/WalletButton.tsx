@@ -1,10 +1,9 @@
-// ウォレット接続ボタンの共通コンポーネント
+// ウォレット接続ボタン（OnchainKit なし）
 
 'use client';
 
-import { ConnectWallet, Wallet, WalletDropdown, WalletDropdownDisconnect } from '@coinbase/onchainkit/wallet';
-import { Avatar, Name, Identity, Address, EthBalance } from '@coinbase/onchainkit/identity';
 import clsx from 'clsx';
+import { useAccount, useConnect, useDisconnect } from 'wagmi';
 
 interface WalletButtonProps {
   isConnected: boolean;
@@ -12,49 +11,76 @@ interface WalletButtonProps {
   variant?: 'default' | 'minimal';
 }
 
+const shorten = (addr?: string) => (addr ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : '');
+
 export function WalletButton({ isConnected, className, variant = 'default' }: WalletButtonProps) {
+  const { address } = useAccount();
+  const { connect, connectors, isPending } = useConnect();
+  const { disconnect } = useDisconnect();
+
+  const primaryConnector =
+    connectors.find((c) => c.id === 'coinbaseWalletSDK') ||
+    connectors.find((c) => c.id === 'injected') ||
+    connectors[0];
+
+  const handleConnect = () => {
+    if (!primaryConnector) return;
+    connect({ connector: primaryConnector });
+  };
+
   if (variant === 'minimal') {
     return (
-      <Wallet>
-        <ConnectWallet className="bg-white/10 border border-white/20 text-white font-medium hover:bg-white/20 transition-all px-6 py-3 rounded-full hover:scale-105 active:scale-95">
-          <Avatar className="h-6 w-6 rounded-full" />
-          <Name />
-        </ConnectWallet>
-        <WalletDropdown>
-          <Identity className="px-4 pt-3 pb-2" hasCopyAddressOnClick>
-            <Avatar />
-            <Name />
-            <Address />
-            <EthBalance />
-          </Identity>
-          <WalletDropdownDisconnect />
-        </WalletDropdown>
-      </Wallet>
+      <div className={clsx('relative', className)}>
+        {!isConnected ? (
+          <button
+            type="button"
+            onClick={handleConnect}
+            disabled={isPending || !primaryConnector}
+            className="bg-white/10 border border-white/20 text-white font-medium hover:bg-white/20 transition-all px-6 py-3 rounded-full hover:scale-105 active:scale-95 disabled:opacity-60"
+          >
+            {isPending ? 'Connecting…' : 'Connect Wallet'}
+          </button>
+        ) : (
+          <div className="inline-flex items-center gap-3 px-4 py-3 bg-white/10 border border-white/20 rounded-full">
+            <span className="text-white font-semibold">{shorten(address)}</span>
+            <button
+              type="button"
+              onClick={() => disconnect()}
+              className="text-sm text-red-300 hover:text-red-200 underline"
+            >
+              Disconnect
+            </button>
+          </div>
+        )}
+      </div>
     );
   }
 
   return (
     <div className={clsx("fixed top-6 right-6 z-[60]", isConnected ? "opacity-0 pointer-events-none" : "opacity-100", className)}>
-      <Wallet>
-        <ConnectWallet className="material-btn material-btn-filled !py-4 !px-8 !rounded-full shadow-lg">
-          <span className="text-base">Wallet Connect</span>
-          <Avatar className="h-0 w-0" />
-          <Name className="h-0 w-0 hidden" />
-        </ConnectWallet>
-        <WalletDropdown className="!rounded-2xl !shadow-xl !mt-2">
-          <Identity hasCopyAddressOnClick className="!bg-[var(--md-sys-color-surface)]">
-            <Avatar />
-            <Name />
-            <Address />
-            <EthBalance />
-          </Identity>
-          <WalletDropdownDisconnect className="!bg-[var(--md-sys-color-error-container)] !text-[var(--md-sys-color-on-error-container)]" />
-        </WalletDropdown>
-      </Wallet>
+      <button
+        type="button"
+        onClick={handleConnect}
+        disabled={isPending || !primaryConnector}
+        className="material-btn material-btn-filled !py-4 !px-8 !rounded-full shadow-lg disabled:opacity-60"
+      >
+        {isPending ? 'Connecting…' : 'Wallet Connect'}
+      </button>
+      {isConnected && (
+        <div className="mt-2 bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline-variant)] rounded-2xl shadow-xl p-4">
+          <div className="font-mono text-sm text-[var(--md-sys-color-on-surface)]">{shorten(address)}</div>
+          <button
+            type="button"
+            onClick={() => disconnect()}
+            className="mt-3 text-sm text-[var(--md-sys-color-error)] underline"
+          >
+            Disconnect
+          </button>
+        </div>
+      )}
     </div>
   );
 }
-
 
 
 

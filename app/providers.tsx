@@ -1,7 +1,6 @@
 'use client';
 
 import { ReactNode, useState, useEffect } from 'react';
-import { OnchainKitProvider } from '@coinbase/onchainkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { baseSepolia } from 'wagmi/chains';
 import { WagmiProvider, createConfig, http } from 'wagmi';
@@ -48,12 +47,7 @@ export function Providers({
     return (
         <WagmiProvider config={wagmiConfig}>
             <QueryClientProvider client={queryClient}>
-                <OnchainKitProvider
-                    chain={baseSepolia}
-                    rpcUrl={rpcUrl}
-                >
-                    {children}
-                </OnchainKitProvider>
+                {children}
             </QueryClientProvider>
         </WagmiProvider>
     );

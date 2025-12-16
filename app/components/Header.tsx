@@ -1,17 +1,21 @@
 // Serious Pop Header
 'use client';
 
-import {
-  ConnectWallet,
-  Wallet,
-  WalletDropdown,
-  WalletDropdownDisconnect,
-} from '@coinbase/onchainkit/wallet';
-import { Avatar, Name, Identity, Address, EthBalance } from '@coinbase/onchainkit/identity';
 import { motion } from 'framer-motion';
+import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { CurrentEthBalance } from './CurrentEthBalance';
+import { SimpleWalletDropdown } from './SimpleWalletDropdown';
 
 export function Header() {
+  const { address, isConnected } = useAccount();
+  const { connect, connectors, isPending } = useConnect();
+  const { disconnect } = useDisconnect();
+
+  const primaryConnector =
+    connectors.find((c) => c.id === 'coinbaseWalletSDK') ||
+    connectors.find((c) => c.id === 'injected') ||
+    connectors[0];
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-[var(--color-pop-border)] bg-[var(--color-pop-bg)]/80 backdrop-blur-md">
       <div className="por-container h-16 flex items-center justify-between">
@@ -46,30 +50,13 @@ export function Header() {
               className="hidden sm:inline-flex px-3 py-1 border border-[var(--color-pop-border)] bg-[var(--color-pop-surface)]/30"
               label="BASE SEPOLIA"
             />
-            <Wallet>
-              <ConnectWallet 
-                className="!bg-black !border !border-[var(--color-pop-border)] !text-[var(--color-pop-text)] !font-[family-name:var(--font-display)] !rounded-none hover:!border-[var(--color-pop-primary)] hover:!text-[var(--color-pop-primary)] transition-colors"
-              >
-                <Avatar className="h-6 w-6 rounded-none" />
-                <Name className="hidden sm:inline font-bold" />
-              </ConnectWallet>
-              <WalletDropdown 
-                className="!bg-[var(--color-pop-surface)] !border !border-[var(--color-pop-border)] !rounded-none !mt-2"
-              >
-                <Identity 
-                  className="px-4 pt-4 pb-3 bg-[var(--color-pop-surface)] border-b border-[var(--color-pop-border)]" 
-                  hasCopyAddressOnClick
-                >
-                  <Avatar className="!w-12 !h-12 !rounded-none" />
-                  <Name className="!font-bold !font-[family-name:var(--font-display)] !text-[var(--color-pop-text)]" />
-                  <Address className="!text-[var(--color-pop-text-muted)]" />
-                  <EthBalance className="!text-[var(--color-pop-primary)] !font-bold" />
-                </Identity>
-                <WalletDropdownDisconnect 
-                  className="!m-0 !rounded-none !bg-black !text-[var(--color-pop-error)] hover:!bg-[var(--color-pop-error)]/10 !font-[family-name:var(--font-display)] uppercase !border-t !border-[var(--color-pop-border)]" 
-                />
-              </WalletDropdown>
-            </Wallet>
+            <SimpleWalletDropdown
+              isConnected={isConnected}
+              address={address}
+              onConnect={() => primaryConnector && connect({ connector: primaryConnector })}
+              onDisconnect={() => disconnect()}
+              isConnecting={isPending || !primaryConnector}
+            />
           </div>
         </motion.div>
       </div>

@@ -3,11 +3,10 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
+import { useAccount, useConnect, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import { formatEther } from 'viem';
 import clsx from 'clsx';
 import { AlertTriangle, CheckCircle2, CircleX, Handshake, Skull, Wallet as WalletIcon } from 'lucide-react';
-import { ConnectWallet, Wallet } from '@coinbase/onchainkit/wallet';
 
 import { REGRET_VAULT_ABI, REGRET_VAULT_ADDRESS } from '../../constants';
 import { type Apology, Outcome, type WriteError } from '../../types';
@@ -125,6 +124,11 @@ export function ResolveClient({ rawId }: ResolveClientProps) {
   }, [normalizedId]);
 
   const { isConnected } = useAccount();
+  const { connect, connectors, isPending: isConnecting } = useConnect();
+  const primaryConnector =
+    connectors.find((c) => c.id === 'coinbaseWalletSDK') ||
+    connectors.find((c) => c.id === 'injected') ||
+    connectors[0];
   const { ensureBaseChain, isSwitchingChain, isOnBase, switchError } = useBaseChainGate();
   const [selectedDecision, setSelectedDecision] = useState<Outcome | null>(null);
   const [pendingDangerDecision, setPendingDangerDecision] = useState<Outcome | null>(null);
@@ -321,9 +325,14 @@ export function ResolveClient({ rawId }: ResolveClientProps) {
               <div className="flex-1 flex flex-col items-center justify-center border border-[var(--color-pop-border)] bg-[var(--color-pop-surface)] p-6 text-center">
                 <WalletIcon size={48} className="text-[var(--color-pop-text-muted)] mb-4" />
                 <p className="mb-6 font-bold">Connect Wallet to Judge</p>
-                <Wallet>
-                   <ConnectWallet className="btn-primary w-full justify-center">CONNECT</ConnectWallet>
-                </Wallet>
+                <button
+                  type="button"
+                  onClick={() => primaryConnector && connect({ connector: primaryConnector })}
+                  disabled={isConnecting || !primaryConnector}
+                  className="btn-primary w-full justify-center disabled:opacity-60"
+                >
+                  {isConnecting ? 'Connecting…' : 'CONNECT'}
+                </button>
               </div>
             ) : !isOnBase ? (
               <div className="flex-1 flex flex-col items-center justify-center border border-[var(--color-pop-error)] bg-[var(--color-pop-error)]/10 p-6 text-center">

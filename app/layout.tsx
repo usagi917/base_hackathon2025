@@ -2,7 +2,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
-import '@coinbase/onchainkit/styles.css';
 import { ArtBackground } from "./components/ArtBackground";
 
 const metadataBase = (() => {
