@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAccount, useConnect, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
+import { base } from 'wagmi/chains';
 import { formatEther } from 'viem';
 import clsx from 'clsx';
 import { AlertTriangle, CheckCircle2, CircleX, Handshake, Skull, Wallet as WalletIcon } from 'lucide-react';
@@ -151,7 +152,11 @@ export function ResolveClient({ rawId }: ResolveClientProps) {
   });
 
   const { data: hash, writeContract, isPending, error: writeError } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess: isTransactionSuccess } = useWaitForTransactionReceipt({ hash });
+  // Force receipt polling on Base so we don't miss the completion event if the wallet hops chains.
+  const { isLoading: isConfirming, isSuccess: isTransactionSuccess } = useWaitForTransactionReceipt({
+    hash,
+    chainId: base.id,
+  });
 
   const apologyData = useMemo(() => apology as Apology | undefined, [apology]);
   const outcomeInt = useMemo(() => Number(apologyData?.outcome ?? Outcome.Pending), [apologyData]);

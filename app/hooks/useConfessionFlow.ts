@@ -3,6 +3,7 @@
 // biome-ignore assist/source/organizeImports: explain why this is needed
 import { useMemo, useState, useSyncExternalStore } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { base } from 'wagmi/chains';
 import { parseEther } from 'viem';
 import { REGRET_VAULT_ABI, REGRET_VAULT_ADDRESS } from '../constants';
 import { Step } from '../types';
@@ -24,7 +25,12 @@ export function useConfessionFlow() {
   const [ignoredHash, setIgnoredHash] = useState<`0x${string}` | null>(null);
 
   const { data: hash, writeContract, isPending: isWriting, error: writeError } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess, data: receipt } = useWaitForTransactionReceipt({ hash });
+  // Always watch the tx on Base Mainnet so the success step is reached even if the wallet
+  // temporarily switches networks (e.g. to Base Sepolia).
+  const { isLoading: isConfirming, isSuccess, data: receipt } = useWaitForTransactionReceipt({
+    hash,
+    chainId: base.id,
+  });
 
   // Wallet connection status can differ between server render and the first client render
   // (wagmi may hydrate from persisted client state). Gate it until after mount to
