@@ -1,7 +1,7 @@
 // Serious Pop Success Step
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Share2, Check, Copy, ExternalLink, RefreshCw } from 'lucide-react';
 import { generateShareLink } from '../../utils/transaction';
@@ -13,8 +13,20 @@ interface SuccessStepProps {
 
 export function SuccessStep({ apologyId, onReset }: SuccessStepProps) {
   const [copied, setCopied] = useState(false);
-  const shareLink = generateShareLink(apologyId);
+  const [shareLink, setShareLink] = useState('');
   const canShare = typeof navigator !== 'undefined' && 'share' in navigator;
+
+  // SSR と CSR で初回 HTML を一致させるため、初期値は空文字にし、
+  // マウント後にブラウザの origin もしくは環境変数から確定させる。
+  const envOrigin = useMemo(() => process.env.NEXT_PUBLIC_SITE_URL ?? '', []);
+
+  useEffect(() => {
+    const origin =
+      envOrigin ||
+      (typeof window !== 'undefined' ? window.location.origin : '');
+
+    setShareLink(generateShareLink(apologyId, origin));
+  }, [apologyId, envOrigin]);
 
   const handleCopy = async () => {
     if (!shareLink) return;

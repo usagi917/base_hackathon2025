@@ -32,13 +32,13 @@ export function extractApologyIdFromReceipt(receipt: { logs: Array<{ address: st
 }
 
 /**
- * シェアリンクを生成
+ * シェアリンクを生成（origin は SSR と CSR で安定させるため引数で渡す）
  */
-export function generateShareLink(apologyId: string | null): string {
-  if (!apologyId) return '';
-  return `${typeof window !== 'undefined' ? window.location.origin : ''}/resolve/${apologyId}`;
+export function generateShareLink(apologyId: string | null, origin: string): string {
+  if (!apologyId || !origin) return '';
+  const normalizedOrigin = origin.endsWith('/') ? origin.slice(0, -1) : origin;
+  return `${normalizedOrigin}/resolve/${apologyId}`;
 }
-
 
 
 
