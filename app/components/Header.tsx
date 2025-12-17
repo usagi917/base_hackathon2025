@@ -43,7 +43,7 @@ export function Header() {
           <div className="flex items-center gap-3">
             <CurrentEthBalance
               className="hidden sm:inline-flex px-3 py-1 border border-[var(--color-pop-border)] bg-[var(--color-pop-surface)]/30"
-              label="BASE SEPOLIA"
+              label="BASE ETH"
             />
             <SimpleWalletDropdown
               isConnected={isConnected}
