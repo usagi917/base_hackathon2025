@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { createPublicClient, http } from 'viem';
-import { baseSepolia } from 'viem/chains';
+import { base } from 'viem/chains';
 
 import { REGRET_VAULT_ABI, REGRET_VAULT_ADDRESS } from '../../../constants';
 import { Outcome, type Apology } from '../../../types';
@@ -99,9 +99,9 @@ export async function GET(
     return new Response('RegretVaultV2 address not configured', { status: 500 });
   }
 
-  const rpcUrl = process.env.BASE_SEPOLIA_RPC_URL;
+  const rpcUrl = process.env.BASE_MAINNET_RPC_URL;
   const client = createPublicClient({
-    chain: baseSepolia,
+    chain: base,
     transport: rpcUrl ? http(rpcUrl) : http(),
   });
 

@@ -49,7 +49,7 @@
 フロントエンドは RegretVaultV2 / RegretJudgmentSBT のアドレスを環境変数から参照します。`.env.local` などに以下を設定してください。
 
 ```bash
-BASE_SEPOLIA_RPC_URL=https://base-sepolia.example
+BASE_MAINNET_RPC_URL=https://mainnet.base.org
 NEXT_PUBLIC_REGRET_VAULT_V2_ADDRESS=0x... # RegretVaultV2 のデプロイ先
 NEXT_PUBLIC_JUDGMENT_SBT_ADDRESS=0x...    # RegretJudgmentSBT のデプロイ先
 # optional
@@ -81,8 +81,8 @@ npm run dev
 
 コントラクトのソースコードは `contracts/` ディレクトリにあります。
 
--   **RegretVaultV2 (メインで使用)**: Base Sepolia（Chain ID 84532）。デプロイ後、`.env` の `NEXT_PUBLIC_REGRET_VAULT_V2_ADDRESS` に設定してください。
--   **RegretJudgmentSBT**: 上記と同時にデプロイし、`.env` の `NEXT_PUBLIC_JUDGMENT_SBT_ADDRESS` に設定してください。
+-   **RegretVaultV2 (メインで使用)**: Base Mainnet（Chain ID 8453）。デプロイ後、`.env` の `NEXT_PUBLIC_REGRET_VAULT_V2_ADDRESS` に設定してください。
+-   **RegretJudgmentSBT**: 同時にデプロイし、`.env` の `NEXT_PUBLIC_JUDGMENT_SBT_ADDRESS` に設定してください。
 
 ### コントラクトのテスト・開発
 
@@ -94,7 +94,7 @@ forge test
 
 ## 注意事項
 
-このプロジェクトは実験的なプロトタイプであり、現在は **Base Sepolia テストネット** での動作を前提としています。
+このプロジェクトは実験的なプロトタイプであり、現在は **Base Mainnet** での動作にも対応しています。
 メインネットにデプロイする場合、実際の暗号資産を失う可能性があります（特に Punish が選択された場合、資金は永久に失われます）。
 
 ## ライセンス

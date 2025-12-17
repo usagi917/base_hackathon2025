@@ -2,24 +2,24 @@
 
 import { ReactNode, useState, useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { baseSepolia } from 'wagmi/chains';
+import { base } from 'wagmi/chains';
 import { WagmiProvider, createConfig, http } from 'wagmi';
 import { coinbaseWallet, metaMask } from 'wagmi/connectors';
 import { sdk } from '@farcaster/miniapp-sdk';
 
 export function Providers({
-    children,
-    rpcUrl,
-}: {
-    children: ReactNode;
-    rpcUrl?: string;
-}) {
-    const [queryClient] = useState(() => new QueryClient());
+        children,
+        rpcUrl,
+    }: {
+        children: ReactNode;
+        rpcUrl?: string;
+    }) {
+        const [queryClient] = useState(() => new QueryClient());
 
-    const [wagmiConfig] = useState(() => createConfig({
-        chains: [baseSepolia],
+        const [wagmiConfig] = useState(() => createConfig({
+        chains: [base],
         transports: {
-            [baseSepolia.id]: rpcUrl ? http(rpcUrl) : http(),
+            [base.id]: rpcUrl ? http(rpcUrl) : http(),
         },
         connectors: [
             metaMask(),

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 import { useAccount, useSwitchChain } from 'wagmi';
-import { baseSepolia } from 'wagmi/chains';
+import { base } from 'wagmi/chains';
 
 type QueuedAction = () => void;
 
@@ -16,7 +16,7 @@ export function useBaseChainGate() {
 
   const queuedActionRef = useRef<QueuedAction | null>(null);
 
-  const isOnBase = chain?.id === baseSepolia.id;
+  const isOnBase = chain?.id === base.id;
 
   const ensureBaseChain = useCallback(
     async (action?: QueuedAction) => {
@@ -28,7 +28,7 @@ export function useBaseChainGate() {
       if (action) queuedActionRef.current = action;
 
       try {
-        await switchChain({ chainId: baseSepolia.id });
+        await switchChain({ chainId: base.id });
         return true;
       } catch {
         // User declined or wallet rejected the switch

@@ -38,7 +38,7 @@ export const metadata: Metadata = {
       button: {
         title: 'Burn ETH & Prove Regret',
         action: {
-          type: 'launch_frame',
+          type: 'launch_miniapp',
           name: 'Proof of Regret',
           url: metadataBase.toString(),
           splashImageUrl: new URL('/miniapp-splash.png', metadataBase).toString(),
@@ -55,13 +55,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const rpcUrl = process.env.BASE_SEPOLIA_RPC_URL;
+  // Use mainnet RPC when present (falls back to deprecated env for compatibility)
+  const mainnetRpc = process.env.BASE_MAINNET_RPC_URL || rpcUrl;
 
   return (
     <html lang="ja">
       <body className="bg-[var(--md-sys-color-background)] text-[var(--md-sys-color-on-background)] antialiased font-sans overflow-x-hidden">
         <ArtBackground />
         <div className="relative z-10">
-          <Providers rpcUrl={rpcUrl}>{children}</Providers>
+          <Providers rpcUrl={mainnetRpc}>{children}</Providers>
         </div>
       </body>
     </html>

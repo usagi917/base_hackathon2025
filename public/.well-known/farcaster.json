@@ -1,0 +1,25 @@
+{
+  "accountAssociation": {
+    "header": "",        
+    "payload": "",
+    "signature": ""
+  },
+  "baseBuilder": {
+    "ownerAddress": "0x539aFCa7DC2FF5A00E4D875773fcA1F948480028"
+  },
+  "miniapp": {
+    "version": "1",
+    "name": "Proof of Regret",
+    "homeUrl": "https://base-app-swart.vercel.app",
+    "iconUrl": "https://base-app-swart.vercel.app/miniapp-icon.png",
+    "splashImageUrl": "https://base-app-swart.vercel.app/miniapp-splash.png",
+    "splashBackgroundColor": "#000000",
+    "heroImageUrl": "https://base-app-swart.vercel.app/miniapp-embed.png",
+    "ogTitle": "Proof of Regret",
+    "ogDescription": "Words are cheap. Proof is on-chain.",
+    "ogImageUrl": "https://base-app-swart.vercel.app/miniapp-embed.png",
+    "primaryCategory": "social",
+    "tags": ["regret", "eth", "baseapp"],
+    "noindex": true
+  }
+}

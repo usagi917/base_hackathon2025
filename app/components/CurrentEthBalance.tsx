@@ -1,11 +1,11 @@
-// Connected wallet ETH balance (Base Sepolia)
+// Connected wallet ETH balance (Base Mainnet)
 'use client';
 
 import clsx from 'clsx';
 import { useSyncExternalStore } from 'react';
 import { formatEther } from 'viem';
 import { useAccount, useBalance } from 'wagmi';
-import { baseSepolia } from 'wagmi/chains';
+import { base } from 'wagmi/chains';
 
 function formatEthShort(value: bigint, fractionDigits = 4) {
   const full = formatEther(value);
@@ -17,7 +17,7 @@ function formatEthShort(value: bigint, fractionDigits = 4) {
 
 export function CurrentEthBalance({
   className,
-  label = 'Balance (Base Sepolia)',
+  label = 'Balance (Base Mainnet)',
 }: {
   className?: string;
   label?: string;
@@ -33,7 +33,7 @@ export function CurrentEthBalance({
 
   const { data, isLoading } = useBalance({
     address,
-    chainId: baseSepolia.id,
+    chainId: base.id,
     query: { enabled, refetchInterval: 15_000 },
   });
 
