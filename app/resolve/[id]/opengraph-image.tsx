@@ -108,7 +108,7 @@ export default async function OpenGraphImage({ params }: { params: Promise<{ id:
                 fontSize: '18px',
               }}
             >
-              Base Sepolia
+              Base Mainnet
             </div>
           </div>
         </div>

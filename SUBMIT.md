@@ -26,7 +26,7 @@
 
 - **フロントエンド**:Next.js 16, TypeScript, Tailwind CSS, Framer Motion
 - **バックエンド**:Solidity, Next.js Serverless Functions 
-- **データベース**:Base Sepolia
+- **データベース**:Base Mainnet
 - **インフラ**:Vercel, Base testNet 
 - **その他**:Wagmi / Viem / OnchainKit
 

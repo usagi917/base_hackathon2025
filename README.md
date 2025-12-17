@@ -31,7 +31,7 @@
 -   **State/Data:** [TanStack Query 5](https://tanstack.com/query/latest)
 -   **UI/Animation:** [Tailwind CSS](https://tailwindcss.com/), [Framer Motion](https://www.framer.com/motion/)
 -   **Smart Contract:** Solidity
--   **Network:** Base Sepolia (Testnet / Chain ID 84532)
+-   **Network:** Base Mainnet (Chain ID 8453)
 
 ![Architecture Diagram](public/diagrams/architecture.svg)
 
@@ -56,7 +56,7 @@ NEXT_PUBLIC_JUDGMENT_SBT_ADDRESS=0x...    # RegretJudgmentSBT のデプロイ先
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
-`BASE_SEPOLIA_RPC_URL` を省略するとパブリック RPC が使われますが、レートリミット回避のため設定を推奨します。
+`BASE_MAINNET_RPC_URL` を省略するとパブリック RPC が使われますが、レートリミット回避のため設定を推奨します。
 
 ### デモ
 

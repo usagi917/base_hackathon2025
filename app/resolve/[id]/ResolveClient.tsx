@@ -165,7 +165,7 @@ export function ResolveClient({ rawId }: ResolveClientProps) {
 
   const confirmBlockedMessage = useMemo(() => {
     if (!isWalletConnected) return 'Connect wallet to judge.';
-    if (!isOnBase) return 'Switch to Base Sepolia first.';
+    if (!isOnBase) return 'Switch to Base first.';
     if (!selectedDecision) return 'Select a decision above.';
     if (isBusy) return 'Please wait…';
     return null;
@@ -337,7 +337,7 @@ export function ResolveClient({ rawId }: ResolveClientProps) {
             ) : !isOnBase ? (
               <div className="flex-1 flex flex-col items-center justify-center border border-[var(--color-pop-error)] bg-[var(--color-pop-error)]/10 p-6 text-center">
                 <AlertTriangle size={48} className="text-[var(--color-pop-error)] mb-4" />
-                <p className="mb-6 font-bold text-[var(--color-pop-error)]">Switch to Base Sepolia</p>
+                <p className="mb-6 font-bold text-[var(--color-pop-error)]">Switch to Base</p>
                 <button type="button" onClick={() => ensureBaseChain()} className="btn-secondary w-full">SWITCH NETWORK</button>
               </div>
             ) : (
@@ -433,7 +433,7 @@ export function ResolveClient({ rawId }: ResolveClientProps) {
                      : !selectedDecision
                        ? 'Select a decision above.'
                        : !isOnBase
-                         ? 'You are not on Base Sepolia. Clicking will prompt a network switch.'
+                        ? 'You are not on Base. Clicking will prompt a network switch.'
                          : null}
                  </div>
                )}

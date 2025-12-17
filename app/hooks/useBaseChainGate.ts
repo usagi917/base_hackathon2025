@@ -7,7 +7,7 @@ import { base } from 'wagmi/chains';
 type QueuedAction = () => void;
 
 /**
- * Small helper hook that keeps the app anchored to Base Sepolia and
+ * Small helper hook that keeps the app anchored to Base Mainnet and
  * optionally queues an action until the chain switch succeeds.
  */
 export function useBaseChainGate() {

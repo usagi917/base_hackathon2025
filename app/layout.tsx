@@ -54,9 +54,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const rpcUrl = process.env.BASE_SEPOLIA_RPC_URL;
-  // Use mainnet RPC when present (falls back to deprecated env for compatibility)
-  const mainnetRpc = process.env.BASE_MAINNET_RPC_URL || rpcUrl;
+  // Prefer explicit mainnet RPC; otherwise wagmi will use the default Base mainnet endpoint.
+  const mainnetRpc = process.env.BASE_MAINNET_RPC_URL;
 
   return (
     <html lang="ja">
