@@ -18,7 +18,7 @@
 | **Reject (拒絶)** | 謝罪を受け入れず、ETH は**謝りたい人（あなた）**に返金されます。 | 「金で解決しようとするな」という拒絶。 |
 | **Punish (処罰)** | ETH は永久にアクセス不可能なアドレスへ送られ、**焼却（Burn）**されます。 | 誰も得をしない、純粋な罰。 |
 
-審判を実行した相手には、結果を示すJudgment SBT が自動ミントされます。
+審判を実行した相手（Judge）には、その決断（Forgive/Reject/Punish）の結果が記録された **Regret Judgment SBT (Soulbound Token)** が自動的にミントされます。これは、その人が他者の運命をどのように決定したかを示す、譲渡不可能なオンチェーンの証となります。
 
 ![Sequence Diagram](public/diagrams/sequence.svg)
 
@@ -31,10 +31,18 @@
 -   **State/Data:** [TanStack Query 5](https://tanstack.com/query/latest)
 -   **UI/Animation:** [Tailwind CSS](https://tailwindcss.com/), [Framer Motion](https://www.framer.com/motion/)
 -   **Smart Contract:** Solidity
+-   **Integration:** [Farcaster Miniapp](https://docs.farcaster.xyz/learn/miniapps/introduction)
 -   **Network:** Base Mainnet (Chain ID 8453)
 
 ![Architecture Diagram](public/diagrams/architecture.svg)
 
+## Farcaster Miniapp 対応
+
+このDAppは **Farcaster Miniapp** (旧 v2 Frames) として動作するように設計されています。
+Warpcast などの Farcaster クライアント内で直接動作し、シームレスなウォレット接続と署名が可能です。
+
+-   **Manifest:** `.well-known/farcaster.json` にホストされています。
+-   **Context:** Farcaster アプリから開かれた場合、コンテキスト（ユーザー情報など）を取得して UX を最適化します。
 
 ## すぐに始める
 
