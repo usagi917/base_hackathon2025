@@ -49,7 +49,7 @@ export function IntroStep({ isConnected }: IntroStepProps) {
         </h1>
         
         <p className="text-base md:text-lg text-[var(--color-pop-text-muted)] max-w-2xl mx-auto font-[family-name:var(--font-body)]">
-          口先だけの謝罪に価値はない。ブロックチェーンに<span className="text-[var(--color-pop-primary)] font-bold">ETH</span>を供物として捧げ、不可逆な誠意を証明せよ。
+          口先だけの謝罪に価値はない。ブロックチェーンに<span className="text-[var(--color-pop-primary)] font-bold">ETH / USDC</span>を供物として捧げ、不可逆な誠意を証明せよ。
         </p>
 
         <motion.div variants={itemVariants} className="pt-2">

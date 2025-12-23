@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAccount, useConnect, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import { base } from 'wagmi/chains';
-import { formatEther } from 'viem';
+import { formatUnits } from 'viem';
 import clsx from 'clsx';
 import { AlertTriangle, CheckCircle2, CircleX, Handshake, Skull, Wallet as WalletIcon } from 'lucide-react';
 
@@ -16,6 +16,7 @@ import { Header } from '../../components/Header';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { useBaseChainGate } from '../../hooks/useBaseChainGate';
 import { getErrorMessage } from '../../utils/error';
+import { DEFAULT_ASSET, findAssetByAddress } from '../../constants/assets';
 
 interface ResolveClientProps {
   rawId: string;
@@ -45,7 +46,7 @@ const DECISION_OPTIONS = [
     outcome: Outcome.Forgiven,
     title: '和解',
     subtitle: '供物を受け入れる',
-    description: '供物（ETH）があなた（審判者）に送られます。',
+    description: '供物（選択された資産）があなた（審判者）に送られます。',
     icon: Handshake,
     color: 'var(--color-pop-primary)',
   },
@@ -160,6 +161,12 @@ export function ResolveClient({ rawId }: ResolveClientProps) {
 
   const apologyData = useMemo(() => apology as Apology | undefined, [apology]);
   const outcomeInt = useMemo(() => Number(apologyData?.outcome ?? Outcome.Pending), [apologyData]);
+  const apologyAsset = useMemo(() => findAssetByAddress(apologyData?.asset), [apologyData?.asset]);
+  const displayAsset = apologyAsset ?? DEFAULT_ASSET;
+  const formattedAmount = useMemo(
+    () => formatUnits(apologyData?.amountDeposited ?? 0n, displayAsset.decimals),
+    [apologyData?.amountDeposited, displayAsset.decimals]
+  );
   const existsOnChain = useMemo(() => {
     if (!apologyData) return false;
     return apologyData.depositedAt !== BigInt(0);
@@ -293,7 +300,7 @@ export function ResolveClient({ rawId }: ResolveClientProps) {
               <div>
                 <span className="text-[var(--color-pop-text-muted)] text-sm font-mono uppercase tracking-wider block mb-2">Offering</span>
                 <div className="text-6xl md:text-8xl font-black font-[family-name:var(--font-display)] text-white leading-none">
-                  {formatEther(apologyData.amountDeposited)} <span className="text-2xl text-[var(--color-pop-text-muted)]">ETH</span>
+                  {formattedAmount} <span className="text-2xl text-[var(--color-pop-text-muted)]">{displayAsset.symbol}</span>
                 </div>
               </div>
               <div className="text-right">

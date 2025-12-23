@@ -4,10 +4,11 @@
 import { useMemo, useState, useSyncExternalStore } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { base } from 'wagmi/chains';
-import { parseEther } from 'viem';
+import { parseUnits } from 'viem';
 import { REGRET_VAULT_ABI, REGRET_VAULT_ADDRESS } from '../constants';
 import { Step } from '../types';
 import { DEFAULT_AMOUNT } from '../constants/config';
+import { DEFAULT_ASSET, SUPPORTED_ASSETS } from '../constants/assets';
 import { extractApologyIdFromReceipt } from '../utils/transaction';
 import { useBaseChainGate } from './useBaseChainGate';
 
@@ -22,6 +23,7 @@ export function useConfessionFlow() {
   const [userStep, setUserStep] = useState<Step>(Step.CONFESS);
   const [message, setMessage] = useState('');
   const [amount, setAmount] = useState(DEFAULT_AMOUNT);
+  const [assetId, setAssetId] = useState<string>(DEFAULT_ASSET.id);
   const [ignoredHash, setIgnoredHash] = useState<`0x${string}` | null>(null);
 
   const { data: hash, writeContract, isPending: isWriting, error: writeError } = useWriteContract();
@@ -57,12 +59,15 @@ export function useConfessionFlow() {
     // 新規送信前に成功結果をクリア
     setIgnoredHash(null);
 
+    const selectedAsset = SUPPORTED_ASSETS.find((asset) => asset.id === assetId) ?? DEFAULT_ASSET;
+    const parsedAmount = parseUnits(amount || '0', selectedAsset.decimals);
+
     const send = () => writeContract({
       address: REGRET_VAULT_ADDRESS,
       abi: REGRET_VAULT_ABI,
       functionName: 'deposit',
-      args: [message],
-      value: parseEther(amount),
+      args: [message, selectedAsset.address, parsedAmount],
+      value: selectedAsset.isNative ? parsedAmount : 0n,
     });
 
     await ensureBaseChain(send);
@@ -72,6 +77,7 @@ export function useConfessionFlow() {
     if (hash) setIgnoredHash(hash);
     setMessage('');
     setAmount(DEFAULT_AMOUNT);
+    setAssetId(DEFAULT_ASSET.id);
     setUserStep(Step.CONFESS);
   };
 
@@ -104,6 +110,8 @@ export function useConfessionFlow() {
     writeError,
     setMessage,
     setAmount,
+    assetId,
+    setAssetId,
     handleDeposit,
     resetFlow,
     nextStep,

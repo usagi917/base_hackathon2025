@@ -18,6 +18,7 @@ export enum Outcome {
 export interface Apology {
   sender: `0x${string}`;
   amountDeposited: bigint;
+  asset: `0x${string}`;
   message: string;
   outcome: Outcome;
   depositedAt: bigint;

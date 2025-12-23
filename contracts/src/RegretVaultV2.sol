@@ -5,12 +5,18 @@ interface IRegretJudgmentSBT {
     function mintToJudge(address judge, uint256 tokenId) external;
 }
 
+interface IERC20 {
+    function transfer(address to, uint256 amount) external returns (bool);
+    function transferFrom(address from, address to, uint256 amount) external returns (bool);
+}
+
 contract RegretVaultV2 {
     enum Outcome { Pending, Forgiven, Rejected, Punished }
 
     struct Apology {
         address sender;
         uint256 amountDeposited;
+        address asset;
         string message;
         Outcome outcome;
         uint256 depositedAt;
@@ -24,6 +30,8 @@ contract RegretVaultV2 {
 
     IRegretJudgmentSBT public immutable judgmentSBT;
 
+    address public constant NATIVE_TOKEN = address(0);
+
     event Deposited(uint256 indexed id, address indexed sender, uint256 amountDeposited);
     event Resolved(uint256 indexed id, Outcome outcome, address indexed resolver);
     event SBTMinted(uint256 indexed id, uint256 indexed tokenId, address indexed judge);
@@ -33,15 +41,27 @@ contract RegretVaultV2 {
         judgmentSBT = IRegretJudgmentSBT(sbtAddress);
     }
 
-    function deposit(string calldata message) external payable returns (uint256) {
-        require(msg.value > 0, "Must deposit something");
+    function deposit(string calldata message, address asset, uint256 amount) external payable returns (uint256) {
         require(bytes(message).length > 0, "Message required");
         require(bytes(message).length <= 300, "Message too long");
+
+        bool isNative = asset == NATIVE_TOKEN;
+        uint256 depositAmount = isNative ? msg.value : amount;
+
+        require(depositAmount > 0, "Must deposit something");
+
+        if (isNative) {
+            require(amount == 0 || amount == msg.value, "Native amount mismatch");
+        } else {
+            require(msg.value == 0, "Do not send native token");
+            _safeTransferFrom(IERC20(asset), msg.sender, address(this), amount);
+        }
 
         uint256 id = nextId++;
         apologies[id] = Apology({
             sender: msg.sender,
-            amountDeposited: msg.value,
+            amountDeposited: depositAmount,
+            asset: asset,
             message: message,
             outcome: Outcome.Pending,
             depositedAt: block.timestamp,
@@ -50,7 +70,7 @@ contract RegretVaultV2 {
             settled: false
         });
 
-        emit Deposited(id, msg.sender, msg.value);
+        emit Deposited(id, msg.sender, depositAmount);
         return id;
     }
 
@@ -70,17 +90,15 @@ contract RegretVaultV2 {
         apology.settled = true;
 
         uint256 amount = apology.amountDeposited;
+        address asset = apology.asset;
 
         // Interactions
         if (outcome == Outcome.Forgiven) {
-            (bool success, ) = payable(msg.sender).call{value: amount}("");
-            require(success, "Transfer failed");
+            _payout(asset, msg.sender, amount);
         } else if (outcome == Outcome.Rejected) {
-            (bool success, ) = payable(apology.sender).call{value: amount}("");
-            require(success, "Transfer failed");
+            _payout(asset, apology.sender, amount);
         } else if (outcome == Outcome.Punished) {
-            (bool success, ) = payable(address(0)).call{value: amount}("");
-            require(success, "Burn failed");
+            _payout(asset, address(0), amount);
         }
 
         judgmentSBT.mintToJudge(msg.sender, id);
@@ -92,5 +110,27 @@ contract RegretVaultV2 {
     function getApology(uint256 id) external view returns (Apology memory) {
         return apologies[id];
     }
-}
 
+    function _payout(address asset, address to, uint256 amount) internal {
+        if (asset == NATIVE_TOKEN) {
+            (bool success, ) = payable(to).call{value: amount}("");
+            require(success, "Transfer failed");
+        } else {
+            _safeTransfer(IERC20(asset), to, amount);
+        }
+    }
+
+    function _safeTransferFrom(IERC20 token, address from, address to, uint256 amount) internal {
+        (bool success, bytes memory data) = address(token).call(
+            abi.encodeWithSelector(token.transferFrom.selector, from, to, amount)
+        );
+        require(success && (data.length == 0 || abi.decode(data, (bool))), "Transfer failed");
+    }
+
+    function _safeTransfer(IERC20 token, address to, uint256 amount) internal {
+        (bool success, bytes memory data) = address(token).call(
+            abi.encodeWithSelector(token.transfer.selector, to, amount)
+        );
+        require(success && (data.length == 0 || abi.decode(data, (bool))), "Transfer failed");
+    }
+}

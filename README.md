@@ -60,6 +60,8 @@ Warpcast などの Farcaster クライアント内で直接動作し、シーム
 BASE_MAINNET_RPC_URL=https://mainnet.base.org
 NEXT_PUBLIC_REGRET_VAULT_V2_ADDRESS=0x... # RegretVaultV2 のデプロイ先
 NEXT_PUBLIC_JUDGMENT_SBT_ADDRESS=0x...    # RegretJudgmentSBT のデプロイ先
+# Asset config (optional)
+NEXT_PUBLIC_USDC_ADDRESS=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 # Base USDC (デフォルトでこの値を使用)
 # optional
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```

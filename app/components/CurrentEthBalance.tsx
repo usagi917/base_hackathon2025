@@ -1,26 +1,29 @@
-// Connected wallet ETH balance (Base Mainnet)
+// Connected wallet asset balance (Base Mainnet)
 'use client';
 
 import clsx from 'clsx';
 import { useSyncExternalStore } from 'react';
-import { formatEther } from 'viem';
+import { formatUnits } from 'viem';
 import { useAccount, useBalance } from 'wagmi';
 import { base } from 'wagmi/chains';
+import type { AssetConfig } from '../constants/assets';
 
-function formatEthShort(value: bigint, fractionDigits = 4) {
-  const full = formatEther(value);
+function formatAssetShort(value: bigint, decimals: number, fractionDigits = 4) {
+  const full = formatUnits(value, decimals);
   const [integer, fraction] = full.split('.');
   if (!fraction) return full;
   const trimmed = fraction.slice(0, fractionDigits).replace(/0+$/, '');
   return trimmed ? `${integer}.${trimmed}` : integer;
 }
 
-export function CurrentEthBalance({
+export function CurrentBalance({
   className,
   label = 'Balance (Base Mainnet)',
+  asset,
 }: {
   className?: string;
   label?: string;
+  asset: AssetConfig;
 }) {
   const { address, isConnected } = useAccount();
   const hasMounted = useSyncExternalStore(
@@ -30,14 +33,16 @@ export function CurrentEthBalance({
   );
 
   const enabled = hasMounted && isConnected && Boolean(address);
+  const isNative = asset.isNative;
 
   const { data, isLoading } = useBalance({
     address,
     chainId: base.id,
+    token: isNative ? undefined : asset.address,
     query: { enabled, refetchInterval: 15_000 },
   });
 
-  const displayValue = data?.value !== undefined ? formatEthShort(data.value) : null;
+  const displayValue = data?.value !== undefined ? formatAssetShort(data.value, asset.decimals) : null;
 
   if (!enabled) return null;
 
@@ -47,11 +52,11 @@ export function CurrentEthBalance({
         'inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider',
         className
       )}
-      title={data?.value !== undefined ? `${formatEther(data.value)} ${data?.symbol ?? 'ETH'}` : undefined}
+      title={data?.value !== undefined ? `${formatUnits(data.value, asset.decimals)} ${data?.symbol ?? asset.symbol}` : undefined}
     >
       <span className="text-[var(--color-pop-text-muted)]">{label}</span>
       <span className="text-[var(--color-pop-primary)] font-bold">
-        {isLoading ? '…' : displayValue ?? '—'} {data?.symbol ?? 'ETH'}
+        {isLoading ? '…' : displayValue ?? '—'} {data?.symbol ?? asset.symbol}
       </span>
     </div>
   );

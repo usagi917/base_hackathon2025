@@ -5,19 +5,27 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, AlertTriangle } from 'lucide-react';
 import { ErrorDisplay } from '../ErrorDisplay';
 import { LoadingSpinner } from '../LoadingSpinner';
-import { CurrentEthBalance } from '../CurrentEthBalance';
+import { CurrentBalance } from '../CurrentEthBalance';
+import { DEFAULT_ASSET, SUPPORTED_ASSETS } from '../../constants/assets';
 
 interface SacrificeStepProps {
   amount: string;
+  assetId: string;
   onAmountChange: (value: string) => void;
+  onAssetChange: (value: string) => void;
   onPrev: () => void;
   onDeposit: () => void;
   error: unknown;
   isLoading?: boolean;
 }
 
-export function SacrificeStep({ amount, onAmountChange, onPrev, onDeposit, error, isLoading }: SacrificeStepProps) {
+export function SacrificeStep({ amount, assetId, onAmountChange, onAssetChange, onPrev, onDeposit, error, isLoading }: SacrificeStepProps) {
+  const selectedAsset = SUPPORTED_ASSETS.find((asset) => asset.id === assetId) ?? DEFAULT_ASSET;
   const isValid = amount && Number(amount) > 0;
+  const stepValue = selectedAsset.decimals === 0
+    ? '1'
+    : `0.${'0'.repeat(Math.max(selectedAsset.decimals - 1, 0))}1`;
+  const inputStep = selectedAsset.decimals > 6 ? '0.000001' : stepValue;
   
   return (
     <motion.div
@@ -39,18 +47,41 @@ export function SacrificeStep({ amount, onAmountChange, onPrev, onDeposit, error
 
         <div className="relative z-10 flex flex-col items-center py-12">
           <label className="text-[var(--color-pop-primary)] font-[family-name:var(--font-display)] uppercase tracking-widest text-sm mb-4">
-            Sacrifice Amount (ETH)
+            Sacrifice Amount ({selectedAsset.symbol})
           </label>
 
-          <CurrentEthBalance
-            className="mb-6 px-3 py-1 border border-[var(--color-pop-border)] bg-[var(--color-pop-surface)]/20"
-            label="WALLET BALANCE"
-          />
+          <div className="flex flex-col gap-3 items-center w-full px-6">
+            <div className="w-full max-w-[420px] text-left">
+              <label className="text-xs uppercase text-[var(--color-pop-text-muted)] font-bold tracking-wider">
+                Asset
+              </label>
+              <div className="mt-1 relative">
+                <select
+                  className="w-full bg-black border border-[var(--color-pop-border)] text-white px-3 py-2 font-mono uppercase tracking-wider"
+                  value={selectedAsset.id}
+                  onChange={(e) => onAssetChange(e.target.value)}
+                  disabled={isLoading}
+                >
+                  {SUPPORTED_ASSETS.map((asset) => (
+                    <option key={asset.id} value={asset.id}>
+                      {asset.label} ({asset.symbol})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <CurrentBalance
+              asset={selectedAsset}
+              className="mb-6 px-3 py-1 border border-[var(--color-pop-border)] bg-[var(--color-pop-surface)]/20"
+              label="WALLET BALANCE"
+            />
+          </div>
           
           <div className="relative flex items-baseline">
             <input
               type="number"
-              step="0.001"
+              step={inputStep}
               min="0"
               placeholder="0.0"
               className="bg-transparent text-center text-6xl md:text-8xl font-black text-white focus:outline-none placeholder:text-[var(--color-pop-border)] font-[family-name:var(--font-display)] w-full max-w-[400px]"

@@ -1,10 +1,11 @@
 import { NextRequest } from 'next/server';
 
-import { createPublicClient, http } from 'viem';
+import { createPublicClient, formatUnits, http } from 'viem';
 import { base } from 'viem/chains';
 
 import { REGRET_VAULT_ABI, REGRET_VAULT_ADDRESS } from '../../../constants';
 import { Outcome, type Apology } from '../../../types';
+import { DEFAULT_ASSET, findAssetByAddress } from '../../../constants/assets';
 
 export const runtime = 'nodejs';
 
@@ -79,14 +80,17 @@ export async function GET(
 
   const outcomeInt = Number(apology.outcome ?? Outcome.Pending);
   const judgment = outcomeLabel(outcomeInt);
+  const asset = findAssetByAddress(apology.asset) ?? DEFAULT_ASSET;
+  const amount = formatUnits(BigInt(apology.amountDeposited ?? 0), asset.decimals);
 
   return Response.json(
     {
       name: `Proof of Regret — Judgment #${tokenId.toString()} — ${judgment}`,
-      description: 'A non-transferable Judgment SBT minted when the judge resolves a Proof of Regret.',
+      description: `A non-transferable Judgment SBT minted when the judge resolves a Proof of Regret. Offering: ${amount} ${asset.symbol}.`,
       image: `${origin}/api/image/${tokenId.toString()}`,
       attributes: [
         { trait_type: '判決', value: judgment },
+        { trait_type: '資産', value: asset.symbol },
       ],
     },
     {
