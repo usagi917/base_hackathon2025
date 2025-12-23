@@ -55,7 +55,7 @@ function formatAsset4(rawAmount: bigint, asset: AssetConfig) {
 
   if (asset.decimals >= 4) {
     const threshold = (10n ** BigInt(asset.decimals)) / 10_000n;
-    if (threshold > 0 && rawAmount > 0n && rawAmount < threshold) {
+    if (threshold > 0n && rawAmount > 0n && rawAmount < threshold) {
       return `<0.0001 ${asset.symbol}`;
     }
   }
@@ -63,9 +63,9 @@ function formatAsset4(rawAmount: bigint, asset: AssetConfig) {
   const scale = 10_000n;
   const divisor = 10n ** BigInt(asset.decimals);
   const numerator = rawAmount * scale;
-  let scaled = divisor == 0 ? 0n : numerator / divisor;
-  const remainder = divisor == 0 ? 0n : numerator % divisor;
-  if (divisor != 0 && remainder * 2n >= divisor) scaled += 1n;
+  let scaled = divisor === 0n ? 0n : numerator / divisor;
+  const remainder = divisor === 0n ? 0n : numerator % divisor;
+  if (divisor !== 0n && remainder * 2n >= divisor) scaled += 1n;
 
   const whole = scaled / scale;
   const frac = scaled % scale;
