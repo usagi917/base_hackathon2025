@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     description: "Words are cheap. Proof is on-chain.",
   },
   other: {
-    'base:app_id': '694a7ae64d3a403912ed7c89',
+    'base:app_id': '6940abc7d19763ca26ddc335',
     'fc:miniapp': JSON.stringify({
       version: 'next',
       imageUrl: new URL('/miniapp-embed.png', metadataBase).toString(),
