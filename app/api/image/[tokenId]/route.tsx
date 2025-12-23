@@ -8,6 +8,7 @@ import { base } from 'viem/chains';
 
 import { REGRET_VAULT_ABI, REGRET_VAULT_ADDRESS } from '../../../constants';
 import { Outcome, type Apology } from '../../../types';
+import { DEFAULT_ASSET, findAssetByAddress, type AssetConfig } from '../../../constants/assets';
 
 export const runtime = 'nodejs';
 
@@ -49,20 +50,27 @@ function formatApprovedJst(unixSeconds: bigint) {
   return `Approved ${y}/${m}/${d} ${hh}:${mm} JST`;
 }
 
-function formatEth4(wei: bigint) {
-  const threshold = 100_000_000_000_000n; // 0.0001 ETH in wei
-  if (wei > 0n && wei < threshold) return '<0.0001 ETH';
+function formatAsset4(rawAmount: bigint, asset: AssetConfig) {
+  if (rawAmount == 0n) return `0 ${asset.symbol}`;
+
+  if (asset.decimals >= 4) {
+    const threshold = (10n ** BigInt(asset.decimals)) / 10_000n;
+    if (threshold > 0n && rawAmount > 0n && rawAmount < threshold) {
+      return `<0.0001 ${asset.symbol}`;
+    }
+  }
 
   const scale = 10_000n;
-  const divisor = 1_000_000_000_000_000_000n;
-  const numerator = wei * scale;
-  let scaled = numerator / divisor;
-  const remainder = numerator % divisor;
-  if (remainder * 2n >= divisor) scaled += 1n;
+  const divisor = 10n ** BigInt(asset.decimals);
+  const numerator = rawAmount * scale;
+  let scaled = divisor === 0n ? 0n : numerator / divisor;
+  const remainder = divisor === 0n ? 0n : numerator % divisor;
+  if (divisor !== 0n && remainder * 2n >= divisor) scaled += 1n;
 
   const whole = scaled / scale;
   const frac = scaled % scale;
-  return `${whole.toString()}.${frac.toString().padStart(4, '0')} ETH`;
+  const padded = frac.toString().padStart(4, '0').replace(/0+$/, '');
+  return padded ? `${whole.toString()}.${padded} ${asset.symbol}` : `${whole.toString()} ${asset.symbol}`;
 }
 
 function outcomeTheme(outcome: number) {
@@ -118,9 +126,10 @@ export async function GET(
   const { label: outcomeLabel, backgroundColor, color, borderColor } = outcomeTheme(outcomeInt);
 
   const amountWei = apology.amountDeposited;
+  const asset = findAssetByAddress(apology.asset) ?? DEFAULT_ASSET;
   const resolvedAt = apology.resolvedAt;
 
-  const amountText = formatEth4(BigInt(amountWei));
+  const amountText = formatAsset4(BigInt(amountWei), asset);
   const approvedText = formatApprovedJst(BigInt(resolvedAt));
 
   const response = new ImageResponse(

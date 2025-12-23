@@ -19,12 +19,14 @@ export default function Home() {
     step,
     message,
     amount,
+    assetId,
     apologyId,
     isConnected,
     isPending,
     writeError,
     setMessage,
     setAmount,
+    setAssetId,
     handleDeposit,
     resetFlow,
     nextStep,
@@ -72,6 +74,8 @@ export default function Home() {
                 <SacrificeStep
                   amount={amount}
                   onAmountChange={setAmount}
+                  assetId={assetId}
+                  onAssetChange={setAssetId}
                   onPrev={prevStep}
                   onDeposit={handleDeposit}
                   error={writeError}

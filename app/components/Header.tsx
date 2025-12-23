@@ -3,8 +3,9 @@
 
 import { motion } from 'framer-motion';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
-import { CurrentEthBalance } from './CurrentEthBalance';
+import { CurrentBalance } from './CurrentEthBalance';
 import { SimpleWalletDropdown } from './SimpleWalletDropdown';
+import { DEFAULT_ASSET } from '../constants/assets';
 
 export function Header() {
   const { address, isConnected } = useAccount();
@@ -41,7 +42,8 @@ export function Header() {
           transition={{ duration: 0.4, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
           <div className="flex items-center gap-3">
-            <CurrentEthBalance
+            <CurrentBalance
+              asset={DEFAULT_ASSET}
               className="hidden sm:inline-flex px-3 py-1 border border-[var(--color-pop-border)] bg-[var(--color-pop-surface)]/30"
               label="BASE ETH"
             />

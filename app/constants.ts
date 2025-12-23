@@ -12,7 +12,11 @@ export const REGRET_VAULT_ABI = [
     {
         "type": "function",
         "name": "deposit",
-        "inputs": [{ "name": "message", "type": "string", "internalType": "string" }],
+        "inputs": [
+            { "name": "message", "type": "string", "internalType": "string" },
+            { "name": "asset", "type": "address", "internalType": "address" },
+            { "name": "amount", "type": "uint256", "internalType": "uint256" }
+        ],
         "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
         "stateMutability": "payable"
     },
@@ -38,6 +42,7 @@ export const REGRET_VAULT_ABI = [
                 "components": [
                     { "name": "sender", "type": "address", "internalType": "address" },
                     { "name": "amountDeposited", "type": "uint256", "internalType": "uint256" },
+                    { "name": "asset", "type": "address", "internalType": "address" },
                     { "name": "message", "type": "string", "internalType": "string" },
                     { "name": "outcome", "type": "uint8", "internalType": "enum RegretVaultV2.Outcome" },
                     { "name": "depositedAt", "type": "uint256", "internalType": "uint256" },
