@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 
 import { createPublicClient, formatUnits, http } from 'viem';
-import { base } from 'viem/chains';
+import { polygon } from 'viem/chains';
 
 import { REGRET_VAULT_ABI, REGRET_VAULT_ADDRESS } from '../../../constants';
 import { Outcome, type Apology } from '../../../types';
@@ -52,9 +52,9 @@ export async function GET(
     }
   })();
 
-  const rpcUrl = process.env.BASE_MAINNET_RPC_URL;
+  const rpcUrl = process.env.POLYGON_MAINNET_RPC_URL;
   const client = createPublicClient({
-    chain: base,
+    chain: polygon,
     transport: rpcUrl ? http(rpcUrl) : http(),
   });
 

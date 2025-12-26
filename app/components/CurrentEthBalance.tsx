@@ -1,11 +1,11 @@
-// Connected wallet asset balance (Base Mainnet)
+// Connected wallet asset balance (Polygon Mainnet)
 'use client';
 
 import clsx from 'clsx';
 import { useSyncExternalStore } from 'react';
 import { formatUnits } from 'viem';
 import { useAccount, useBalance } from 'wagmi';
-import { base } from 'wagmi/chains';
+import { polygon } from 'wagmi/chains';
 import type { AssetConfig } from '../constants/assets';
 
 function formatAssetShort(value: bigint, decimals: number, fractionDigits = 4) {
@@ -18,7 +18,7 @@ function formatAssetShort(value: bigint, decimals: number, fractionDigits = 4) {
 
 export function CurrentBalance({
   className,
-  label = 'Balance (Base Mainnet)',
+  label = 'Balance (Polygon Mainnet)',
   asset,
 }: {
   className?: string;
@@ -37,7 +37,7 @@ export function CurrentBalance({
 
   const { data, isLoading } = useBalance({
     address,
-    chainId: base.id,
+    chainId: polygon.id,
     token: isNative ? undefined : asset.address,
     query: { enabled, refetchInterval: 15_000 },
   });

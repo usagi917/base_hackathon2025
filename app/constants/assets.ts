@@ -11,17 +11,22 @@ export type AssetConfig = {
   isNative: boolean;
 };
 
+// Polygon USDC (Native USDC on Polygon)
 const USDC_ADDRESS = (process.env.NEXT_PUBLIC_USDC_ADDRESS ||
-  '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913') as `0x${string}`;
+  '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359') as `0x${string}`;
+
+// Polygon JPYC
+const JPYC_ADDRESS = (process.env.NEXT_PUBLIC_JPYC_ADDRESS ||
+  '0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c') as `0x${string}`;
 
 export const SUPPORTED_ASSETS: AssetConfig[] = [
   {
-    id: 'eth',
-    symbol: 'ETH',
-    label: 'Base ETH',
-    address: ZERO_ADDRESS,
+    id: 'jpyc',
+    symbol: 'JPYC',
+    label: 'JPYC',
+    address: JPYC_ADDRESS,
     decimals: 18,
-    isNative: true,
+    isNative: false,
   },
   {
     id: 'usdc',

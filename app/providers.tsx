@@ -2,7 +2,7 @@
 
 import { ReactNode, useState, useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { base } from 'wagmi/chains';
+import { polygon } from 'wagmi/chains';
 import { WagmiProvider, createConfig, http } from 'wagmi';
 import { coinbaseWallet, metaMask } from 'wagmi/connectors';
 import { sdk } from '@farcaster/miniapp-sdk';
@@ -17,9 +17,9 @@ export function Providers({
         const [queryClient] = useState(() => new QueryClient());
 
         const [wagmiConfig] = useState(() => createConfig({
-        chains: [base],
+        chains: [polygon],
         transports: {
-            [base.id]: rpcUrl ? http(rpcUrl) : http(),
+            [polygon.id]: rpcUrl ? http(rpcUrl) : http(),
         },
         connectors: [
             metaMask(),

@@ -2,12 +2,12 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 import { useAccount, useSwitchChain } from 'wagmi';
-import { base } from 'wagmi/chains';
+import { polygon } from 'wagmi/chains';
 
 type QueuedAction = () => void;
 
 /**
- * Small helper hook that keeps the app anchored to Base Mainnet and
+ * Small helper hook that keeps the app anchored to Polygon Mainnet and
  * optionally queues an action until the chain switch succeeds.
  */
 export function useBaseChainGate() {
@@ -16,7 +16,7 @@ export function useBaseChainGate() {
 
   const queuedActionRef = useRef<QueuedAction | null>(null);
 
-  const isOnBase = chain?.id === base.id;
+  const isOnBase = chain?.id === polygon.id;
 
   const ensureBaseChain = useCallback(
     async (action?: QueuedAction) => {
@@ -28,7 +28,7 @@ export function useBaseChainGate() {
       if (action) queuedActionRef.current = action;
 
       try {
-        await switchChain({ chainId: base.id });
+        await switchChain({ chainId: polygon.id });
         return true;
       } catch {
         // User declined or wallet rejected the switch

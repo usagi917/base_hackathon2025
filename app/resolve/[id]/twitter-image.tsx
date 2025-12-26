@@ -108,7 +108,7 @@ export default async function TwitterImage({ params }: { params: Promise<{ id: s
                 fontSize: '18px',
               }}
             >
-              Base Mainnet
+              Polygon Mainnet
             </div>
           </div>
         </div>

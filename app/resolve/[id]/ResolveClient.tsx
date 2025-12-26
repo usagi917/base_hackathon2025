@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAccount, useConnect, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
-import { base } from 'wagmi/chains';
+import { polygon } from 'wagmi/chains';
 import { formatUnits } from 'viem';
 import clsx from 'clsx';
 import { AlertTriangle, CheckCircle2, CircleX, Handshake, Skull, Wallet as WalletIcon } from 'lucide-react';
@@ -153,10 +153,10 @@ export function ResolveClient({ rawId }: ResolveClientProps) {
   });
 
   const { data: hash, writeContract, isPending, error: writeError } = useWriteContract();
-  // Force receipt polling on Base so we don't miss the completion event if the wallet hops chains.
+  // Force receipt polling on Polygon so we don't miss the completion event if the wallet hops chains.
   const { isLoading: isConfirming, isSuccess: isTransactionSuccess } = useWaitForTransactionReceipt({
     hash,
-    chainId: base.id,
+    chainId: polygon.id,
   });
 
   const apologyData = useMemo(() => apology as Apology | undefined, [apology]);
@@ -177,7 +177,7 @@ export function ResolveClient({ rawId }: ResolveClientProps) {
 
   const confirmBlockedMessage = useMemo(() => {
     if (!isWalletConnected) return 'Connect wallet to judge.';
-    if (!isOnBase) return 'Switch to Base first.';
+    if (!isOnBase) return 'Switch to Polygon first.';
     if (!selectedDecision) return 'Select a decision above.';
     if (isBusy) return 'Please wait…';
     return null;
@@ -349,7 +349,7 @@ export function ResolveClient({ rawId }: ResolveClientProps) {
             ) : !isOnBase ? (
               <div className="flex-1 flex flex-col items-center justify-center border border-[var(--color-pop-error)] bg-[var(--color-pop-error)]/10 p-6 text-center">
                 <AlertTriangle size={48} className="text-[var(--color-pop-error)] mb-4" />
-                <p className="mb-6 font-bold text-[var(--color-pop-error)]">Switch to Base</p>
+                <p className="mb-6 font-bold text-[var(--color-pop-error)]">Switch to Polygon</p>
                 <button type="button" onClick={() => ensureBaseChain()} className="btn-secondary w-full">SWITCH NETWORK</button>
               </div>
             ) : (
@@ -445,7 +445,7 @@ export function ResolveClient({ rawId }: ResolveClientProps) {
                      : !selectedDecision
                        ? 'Select a decision above.'
                        : !isOnBase
-                        ? 'You are not on Base. Clicking will prompt a network switch.'
+                        ? 'You are not on Polygon. Clicking will prompt a network switch.'
                          : null}
                  </div>
                )}

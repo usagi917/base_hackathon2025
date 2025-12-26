@@ -54,8 +54,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Prefer explicit mainnet RPC; otherwise wagmi will use the default Base mainnet endpoint.
-  const mainnetRpc = process.env.BASE_MAINNET_RPC_URL;
+  // Prefer explicit mainnet RPC; otherwise wagmi will use the default Polygon mainnet endpoint.
+  const mainnetRpc = process.env.POLYGON_MAINNET_RPC_URL;
 
   return (
     <html lang="ja">
